@@ -1,26 +1,26 @@
-# 22 - Local Development & Setup Guide
+# 22 - Hướng dẫn Phát triển Cục bộ & Setup (Local Development)
 
-> **Document Status:** `[DECISION]` Developer Environment Setup  
-
----
-
-## 1. Prerequisites & Toolchain Setup
-
-To set up a local development PC for hardware simulation and gateway execution, install:
-* **Operating System:** Windows 11 / Linux (Ubuntu 22.04) / macOS
-* **Embedded Toolchain:** ESP-IDF v5.1+ or VS Code with PlatformIO extension
-* **Backend Tools:** Node.js v20+ LTS, Docker Desktop, Mosquitto MQTT Client (`mosquitto_pub` / `mosquitto_sub`)
-* **Python Utilities:** Python 3.10+ (for AI model conversion & TFLite quantizer scripts)
+> **Trạng thái Tài liệu:** `[DECISION]` Cấu hình Môi trường Lập trình viên  
 
 ---
 
-## 2. Environment Architecture & Mocking
+## 1. Công cụ Yêu cầu & Setup Toolchain
 
-When physical ESP32 hardware is unavailable, developers use the **Node Telemetry Simulator**:
+Để thiết lập máy tính phát triển local phục vụ giả lập phần cứng và chạy gateway, cài đặt:
+* **Hệ điều hành:** Windows 11 / Linux (Ubuntu 22.04) / macOS
+* **Embedded Toolchain:** ESP-IDF v5.1+ hoặc VS Code kết hợp extension PlatformIO
+* **Công cụ Backend:** Node.js v20+ LTS, Docker Desktop, Mosquitto MQTT Client (`mosquitto_pub` / `mosquitto_sub`)
+* **Công cụ Python:** Python 3.10+ (phục vụ script chuyển đổi mô hình AI & lượng hóa TFLite)
+
+---
+
+## 2. Kiến trúc Môi trường & Giả lập (Mocking Environment)
+
+Khi chưa có sẵn phần cứng ESP32 vật lý, lập trình viên sử dụng **Node Telemetry Simulator**:
 
 ```text
   ┌────────────────────────────────────────────────────────┐
-  │              Local Developer PC                        │
+  │              Máy tính Phát triển Local                 │
   │                                                        │
   │  ┌────────────────────┐      ┌──────────────────────┐  │
   │  │  ESP32 Node Mock   │─────>│ Local Edge Gateway   │  │
@@ -35,15 +35,15 @@ When physical ESP32 hardware is unavailable, developers use the **Node Telemetry
 
 ---
 
-## 3. Recommended Workspace Layout
+## 3. Cấu trúc Workspace Khuyến nghị
 
 ```text
 / (Project Root)
-├── README.md                  # Project Entry Blueprint
-├── docs/                      # Technical Documentation Suite
-├── config/                    # Gateway & Network Config Templates
+├── README.md                  # Tài liệu Tổng quan Dự án
+├── docs/                      # Bộ Tài liệu Kỹ thuật
+├── config/                    # Template Cấu hình Gateway & Network
 │   ├── mosquitto.conf
 │   └── gateway.config.json
-└── tools/                     # Hardware Simulators & Test Scripts (Non-code mocks)
+└── tools/                     # Code Giả lập Phần cứng & Script Test (Non-code mocks)
     └── mock_event_publisher.py
 ```

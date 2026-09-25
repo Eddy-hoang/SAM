@@ -1,71 +1,71 @@
-# 06 - AI Pipeline Specification
+# 06 - Đặc tả AI Pipeline (AI Pipeline Specification)
 
-> **Document Status:** `[DECISION]` Vision AI Model & Execution Blueprint  
+> **Trạng thái Tài liệu:** `[DECISION]` Blueprint Mô hình Vision AI & Thực thi  
 > **Framework:** TensorFlow Lite for Microcontrollers (TFLite Micro) + ESP-NN  
 
 ---
 
-## 1. Domain Taxonomy & Formal Terminology
+## 1. Thuật ngữ & Phân định Khái niệm Kỹ thuật
 
-To prevent architectural ambiguity, the AI pipeline strictly distinguishes between 7 operational terms:
+Để tránh mơ hồ trong kiến trúc, pipeline AI phân định ranh giới nghiêm ngặt giữa 7 thuật ngữ vận hành:
 
 ```text
   1. Model ──> 2. Inference ──> 3. Detection ──> 4. Observation ──> 5. Event ──> 6. Decision ──> 7. Action
 ```
 
-| Term | Technical Definition | Example |
+| Thuật ngữ | Định nghĩa Kỹ thuật | Ví dụ Minh họa |
 | :--- | :--- | :--- |
-| **Model** | Static binary graph containing trained weights. | `person_detect_v2_int8.tflite` (2.1 MB) |
-| **Inference** | Execution of forward pass over 1 image matrix. | Compute output tensor in 140ms on Core 1 |
-| **Detection** | Raw probability score from output tensor. | `Score: 0.88` for class `Person` in Frame #104 |
-| **Observation**| Filtered detection meeting single-frame threshold. | Single frame positive observation ($Score \ge 0.75$) |
-| **Event** | Temporal state change validated over time window. | State transitioned from `CLEAR` to `PERSON_PRESENT` |
-| **Decision** | Risk Engine calculation based on active events. | Threat Level escalated to `HIGH` |
-| **Action** | Actuation command emitted by Safety Policy. | `SOUND_ALARM_SIREN` sent via ESP-NOW |
+| **Model** | Đồ thị file binary chứa các trọng số đã huấn luyện. | `person_detect_v2_int8.tflite` (2.1 MB) |
+| **Inference** | Việc thực thi một lượt tính toán forward pass trên 1 ma trận ảnh. | Tính toán tensor đầu ra trong 140ms trên Core 1 |
+| **Detection** | Giá trị xác suất thô trích xuất từ tensor đầu ra. | `Score: 0.88` cho lớp `Person` tại Frame #104 |
+| **Observation**| Nhận diện đã lọc đạt ngưỡng tin cậy trên 1 frame. | Quan sát dương tính trên 1 frame ($Score \ge 0.75$) |
+| **Event** | Sự thay đổi trạng thái theo thời gian được xác minh qua cửa sổ mẫu.| Trạng thái chuyển từ `CLEAR` sang `PERSON_PRESENT` |
+| **Decision** | Quyết định tính toán từ Risk Engine dựa trên các sự kiện active. | Cấp độ Đe dọa (Threat Level) tăng lên `HIGH` |
+| **Action** | Lệnh kích hoạt phát ra từ tầng Safety Policy. | Lệnh `SOUND_ALARM_SIREN` gửi qua ESP-NOW |
 
 ---
 
-## 2. Model Selection & Quantization Strategy
+## 2. Lựa chọn Mô hình & Chiến lược Lượng hóa (Quantization)
 
-### Selected Architecture
-* **Primary Model:** Quantized MobileNet-V2 (Alpha 0.35, $96 \times 96$ input grayscale or RGB). `[DECISION]`
-* **Model Purpose:** Binary Human Presence Detection (Person vs. Background) and Fire/Smoke color-blob pattern validation.
-* **Quantization Method:** Full INT8 Quantization (post-training quantization using representative calibration dataset).
+### Kiến trúc Lựa chọn
+* **Mô hình Chính (Primary Model):** Quantized MobileNet-V2 (Alpha 0.35, đầu vào $96 \times 96$ grayscale hoặc RGB). `[DECISION]`
+* **Mục đích Mô hình:** Phát hiện sự xuất hiện của con người (Person vs. Background) và xác minh mẫu màu khói/cháy.
+* **Phương pháp Lượng hóa:** Full INT8 Quantization (post-training quantization sử dụng tập dữ liệu hiệu chuẩn đại diện).
 
-### Resource Benchmark Targets
+### Chỉ số Benchmark Mục tiêu
 
-| Metric | Target Value | Architectural Status |
+| Chỉ số (Metric) | Giá trị Mục tiêu | Trạng thái Kiến trúc |
 | :--- | :--- | :--- |
-| **Model Binary Size** | 2.1 MB (Stored in Flash memory) | `[DECISION]` |
-| **Tensor Arena Size** | 150 KB (Allocated in internal SRAM) | `[DECISION]` |
-| **Inference Latency** | 120 ms – 160 ms per frame | `[VERIFY]` |
-| **Target Frame Rate** | 5 FPS | `[DECISION]` |
-| **True Positive Rate (TPR)**| $\ge 92\%$ at 3-meter distance | `[VERIFY]` |
-| **False Positive Rate (FPR)**| $\le 2\%$ post-temporal filter | `[DECISION]` |
+| **Kích thước Binary Model** | 2.1 MB (Lưu trong Flash memory) | `[DECISION]` |
+| **Kích thước Tensor Arena** | 150 KB (Cấp phát trong internal SRAM) | `[DECISION]` |
+| **Độ trễ Suy luận (Inference Latency)**| 120 ms – 160 ms mỗi frame | `[VERIFY]` |
+| **Tốc độ Khung hình (Target FPS)**| 5 FPS | `[DECISION]` |
+| **Tỷ lệ Dương tính Đúng (TPR)**| $\ge 92\%$ ở khoảng cách 3 mét | `[VERIFY]` |
+| **Tỷ lệ Dương tính Giả (FPR)**| $\le 2\%$ sau bộ lọc temporal filter | `[DECISION]` |
 
 ---
 
-## 3. Preprocessing & Tensor Allocation Flow
+## 3. Tiền xử lý & Quy trình Cấp phát Tensor
 
 ```text
-Input Camera Frame (QVGA 320x240 RGB565)
+Khung hình Camera Đầu vào (QVGA 320x240 RGB565)
           │
           ▼  [Bilinear Downsampling]
-Resized Matrix (96x96 Grayscale or RGB)
+Ma trận Ảnh Resize (96x96 Grayscale hoặc RGB)
           │
           ▼  [Int8 Normalization: (Pixel - 128)]
-Quantized Input Tensor Array
+Mảng Input Tensor Quantized
           │
-          ▼  [ESP-NN Accelerated Convolution Ops]
-TFLite Micro Execution Engine
+          ▼  [Tập lệnh Tăng tốc Convolutions ESP-NN]
+Engine Thực thi TFLite Micro
           │
-          ▼  [Output Softmax Extraction]
-Detection Probability Vector: [p_background, p_person]
+          ▼  [Trích xuất Output Softmax]
+Vector Xác suất Đầu ra: [p_background, p_person]
 ```
 
 ---
 
-## 4. Model Evaluation & Failure Recovery
+## 4. Đánh giá Mô hình & Xử lý Ngoại lệ
 
-1. **False Positive Handling:** Single-frame false positives caused by sudden light changes are ignored by requiring $N=3$ consecutive frame matches in the downstream Temporal Engine (see [`07-event-generation.md`](file:///d:/SAM/docs/07-event-generation.md)).
-2. **False Negative Handling:** Once an active `PERSON_PRESENT` state is established, the state engine uses a **cooldown hysteresis timer** (e.g., 5 seconds of consecutive zero detections required to revert to `CLEAR`), ensuring brief occlusion does not drop the alarm state.
+1. **Xử lý Báo động giả (False Positive Handling):** Các nhận diện sai 1 frame do thay đổi ánh sáng đột ngột sẽ bị loại bỏ hoàn toàn bằng việc yêu cầu $N=3$ frame khớp liên tiếp ở Temporal Engine phía sau (xem [`07-event-generation.md`](file:///d:/SAM/docs/07-event-generation.md)).
+2. **Xử lý Âm tính giả (False Negative Handling):** Khi trạng thái `PERSON_PRESENT` đã được thiết lập, state engine áp dụng **bộ đếm thời gian trễ Cooldown Hysteresis** (ví dụ: cần 5 giây liên tiếp không nhận diện được mới chuyển về `CLEAR`), đảm bảo hiện tượng che khuất thoáng qua không làm rơi trạng thái báo động.

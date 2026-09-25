@@ -1,36 +1,36 @@
-# 17 - Privacy Architecture & Data Governance
+# 17 - Kiến trúc Quyền riêng tư & Quản trị Dữ liệu (Privacy Architecture)
 
-> **Document Status:** `[DECISION]` Privacy-by-Design Specification  
+> **Trạng thái Tài liệu:** `[DECISION]` Đặc tả Quyền riêng tư từ Thiết kế (Privacy-by-Design)  
 
 ---
 
-## 1. On-Device Metadata Architecture
+## 1. Kiến trúc Metadata trên Thiết bị (On-Device Metadata)
 
-SafeHome AI Mesh strictly enforces a **Zero-Video-Streaming Privacy Architecture**. Camera sensors function exclusively as intelligent optical event detectors:
+SafeHome AI Mesh thực thi nghiêm ngặt **Kiến trúc Quyền riêng tư Zero-Video-Streaming**. Các cảm biến camera hoạt động hoàn toàn như các bộ phát hiện sự kiện quang học thông minh:
 
 ```text
-Physical Scene ──> Frame RAM (Volatile) ──> AI Inference ──> Metadata JSON ──> RAM Wiped
-                           │
-                           └─── Raw Frame NEVER leaves RAM during Normal State
+Khung cảnh Vật lý ──> Frame RAM (Bay hơi) ──> AI Inference ──> Metadata JSON ──> RAM bị xóa sạch
+                             │
+                             └─── Frame thô KHÔNG BAO GIỜ rời khỏi RAM trong Trạng thái Bình thường
 ```
 
 ---
 
-## 2. Image Retention & Evidentiary Snapshot Rules
+## 2. Quy tắc Lưu trữ Ảnh Bằng chứng khi có Alert (Evidentiary Snapshot)
 
-1. **Normal Operational State:** Raw camera frame buffers reside in volatile PSRAM for $< 200\text{ ms}$ during inference processing and are immediately overwritten by the next frame DMA buffer. Zero disk retention.
-2. **Alert Evidentiary Snapshot:**  
-   * *Trigger:* ONLY when a `CRITICAL` or `HIGH` risk alert is validated by the Risk Engine.
-   * *Action:* The camera node captures a single JPEG snapshot ($640 \times 480$), encrypts it with AES-128, and transmits it to the local Gateway database.
-   * *Retention Lifetime:* Stored locally on Gateway for **7 days**, after which an automated cron job performs cryptographically secure file deletion (`shred / wipe`).
+1. **Trạng thái Vận hành Bình thường:** Các bộ đệm frame camera thô chỉ tồn tại trong bộ nhớ tạm PSRAM ngắn hơn $< 200\text{ ms}$ trong thời gian xử lý suy luận và lập tức bị ghi đè bởi frame tiếp theo. Không lưu vào đĩa đĩa.
+2. **Snapshot Bằng chứng khi có Alert:**  
+   * *Điều kiện Kích hoạt:* CHỈ KHI có cảnh báo rủi ro mức `CRITICAL` hoặc `HIGH` đã được kiểm duyệt bởi Risk Engine.
+   * *Hành động:* Nút camera chụp đúng 1 tấm ảnh JPEG ($640 \times 480$), mã hóa bằng AES-128 và gửi về CSDL local trên Gateway.
+   * *Thời gian Lưu trữ (Retention Lifetime):* Lưu cục bộ trên Gateway trong **7 ngày**, sau đó một cron job tự động thực thi xóa file bảo mật (`shred / wipe`).
 
 ---
 
-## 3. Data Minimization & Cloud Insulation Matrix
+## 3. Ma trận Tối thiểu hóa Dữ liệu & Cách ly Cloud
 
-| Data Type | Stored on ESP32 Node? | Transmitted to Gateway? | Transmitted to Cloud? | User Access Level |
+| Loại Dữ liệu | Lưu trên Nút ESP32? | Truyền về Gateway? | Truyền lên Cloud? | Cấp độ Truy cập Người dùng |
 | :--- | :--- | :--- | :--- | :--- |
-| **Raw Video Stream** | NO | NO | **NEVER** | None |
-| **Alert JPEG Frame** | NO (In Memory Only) | YES (Encrypted Local DB) | OPTIONAL (User Opt-in Only) | Admin Owner Only |
-| **Detection Metadata**| NO | YES (Local DB) | NO | All Dashboard Users |
-| **Sensor Telemetry** | NO | YES (Local DB) | NO | All Dashboard Users |
+| **Luồng Video Thô** | KHÔNG | KHÔNG | **KHÔNG BAO GIỜ** | Không có |
+| **Ảnh JPEG Bằng chứng**| KHÔNG (Chỉ RAM) | CÓ (CSDL Local Mã hóa) | TÙY CHỌN (Chỉ khi Opt-in) | Chỉ Admin Owner |
+| **Detection Metadata** | KHÔNG | CÓ (CSDL Local) | KHÔNG | Tất cả Dashboard Users |
+| **Telemetry Cảm biến** | KHÔNG | CÓ (CSDL Local) | KHÔNG | Tất cả Dashboard Users |

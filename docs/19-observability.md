@@ -1,12 +1,12 @@
-# 19 - Observability & Diagnostics
+# 19 - Khả năng Giám sát & Chẩn đoán (Observability)
 
-> **Document Status:** `[DECISION]` Telemetry, Metrics & Logging Specification  
+> **Trạng thái Tài liệu:** `[DECISION]` Đặc tả Telemetry, Metrics & Logging  
 
 ---
 
-## 1. System Metrics & Telemetry Specification
+## 1. Đặc tả Chỉ số Metrics & Telemetry Hệ thống
 
-The system collects real-time operational metrics exposed via Gateway endpoint `GET /api/system/status`:
+Hệ thống thu thập các chỉ số vận hành realtime được truy vấn qua endpoint Gateway `GET /api/system/status`:
 
 ```json
 {
@@ -27,9 +27,9 @@ The system collects real-time operational metrics exposed via Gateway endpoint `
 
 ---
 
-## 2. Structural Structured Log Format (JSON Lines)
+## 2. Định dạng Log Cấu trúc (JSON Lines)
 
-All Gateway micro-services emit JSON logs to standard output for processing:
+Tất cả các vi dịch vụ Gateway phát log cấu trúc JSON ra tiêu chuẩn stdout để phục vụ thu thập:
 
 ```json
 {
@@ -38,7 +38,7 @@ All Gateway micro-services emit JSON logs to standard output for processing:
   "component": "RISK_ENGINE",
   "trace_id": "tr_8812a0f49",
   "event_id": "9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d",
-  "message": "Risk Score evaluated: ELEVATED -> HIGH",
+  "message": "Điểm Rủi ro được đánh giá: ELEVATED -> HIGH",
   "context": {
     "previous_score": 35,
     "new_score": 65,
@@ -49,9 +49,9 @@ All Gateway micro-services emit JSON logs to standard output for processing:
 
 ---
 
-## 3. Demo Monitoring Metrics Panel
+## 3. Panel Giám sát Chỉ số cho Bài Trình diễn Demo
 
-For the Danang AI4Life competition demo, the UI dashboard features a live **System Health Gauge**:
-1. **ESP-NOW Latency Gauge:** Real-time round-trip latency graph ($\text{Target } <20\text{ ms}$).
-2. **Edge AI Inference Latency:** Continuous ESP32-S3 inference loop execution speed ($\text{Target } 130-150\text{ ms}$).
-3. **Mesh Node Topology Map:** Live node online/offline status with battery levels and RF RSSI signal strength indicators.
+Phục vụ bài trình diễn cuộc thi Danang AI4Life, giao diện UI trang bị panel **System Health Gauge** sống:
+1. **Đồng hồ Độ trễ ESP-NOW:** Đồ thị độ trễ truyền phát hai chiều khứ hồi realtime ($\text{Mục tiêu } <20\text{ ms}$).
+2. **Độ trễ Suy luận Edge AI:** Tốc độ thực thi vòng lặp suy luận ESP32-S3 liên tục ($\text{Mục tiêu } 130-150\text{ ms}$).
+3. **Bản đồ Topology Nút Mesh:** Hiển thị trạng thái online/offline, dung lượng pin và cường độ tín hiệu RF RSSI từng nút.

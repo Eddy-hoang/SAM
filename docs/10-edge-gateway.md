@@ -1,55 +1,55 @@
-# 10 - Edge Gateway Subsystem Specification
+# 10 - Đặc tả Phân hệ Edge Gateway (Edge Gateway Subsystem)
 
-> **Document Status:** `[DECISION]` Gateway Software Architecture  
-> **Deployment Target:** Raspberry Pi 4B (4GB RAM) / Intel N100 Mini PC running Ubuntu 22.04 LTS  
+> **Trạng thái Tài liệu:** `[DECISION]` Kiến trúc Phần mềm Gateway  
+> **Mục tiêu Triển khai:** Raspberry Pi 4B (4GB RAM) / Intel N100 Mini PC chạy Ubuntu 22.04 LTS  
 
 ---
 
-## 1. Modular Subsystem Architecture
+## 1. Kiến trúc Phân hệ Mô-đun (Modular Subsystem Architecture)
 
-The Edge Gateway is designed as an isolated, containerized application with 8 core micro-modules:
+Edge Gateway được thiết kế dạng ứng dụng container hóa mô-đun hóa cách ly gồm 8 vi mô-đun cốt lõi:
 
 ```text
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                            Edge Gateway System                              │
+│                           Hệ thống Edge Gateway                             │
 ├──────────────────────┬──────────────────────┬───────────────────────────────┤
 │ 1. Device Manager    │ 2. Message Receiver  │ 3. Event Processing Engine    │
-│  (MAC/IP Registry)   (MQTT / Serial Bridge)  (Validation & Normalization)   │
+│  (Quản lý MAC/IP)    │  (MQTT / Serial)     │  (Xác thực & Chuẩn hóa)       │
 ├──────────────────────┼──────────────────────┼───────────────────────────────┤
 │ 4. Deterministic     │ 5. Storage Adapter   │ 6. API Server & Auth          │
-│    Risk Engine       │  (SQLite/TimescaleDB)|  (REST HTTP Endpoints)        │
+│    Risk Engine       │  (SQLite/TimescaleDB)|  (Các Endpoint REST HTTP)     │
 ├──────────────────────┼──────────────────────┼───────────────────────────────┤
 │ 7. Realtime Server   │ 8. Notification Mgr  │ 9. Safety Policy Firewall     │
-│  (WebSocket Push)    │  (Local Siren/Push)  │  (ACTUATOR VALIDATION LAYER)  │
+│  (WebSocket Push)    │  (Còi Local/Push)    │  (TẦNG KIỂM DUYỆT LỆNH KÍCH HOẠT)│
 └──────────────────────┴──────────────────────┴───────────────────────────────┘
 ```
 
 ---
 
-## 2. Ingest, Validation & Normalization Pipeline
+## 2. Pipeline Ingest, Xác thực & Chuẩn hóa (Ingest Pipeline)
 
 ```mermaid
 graph TD
-    IN1["ESP-NOW Frame (Serial)"] --> RX["Message Receiver Module"]
-    IN2["MQTT Telemetry Topic"] --> RX
+    IN1["Gói tin ESP-NOW (Serial)"] --> RX["Mô-đun Message Receiver"]
+    IN2["Topic Telemetry MQTT"] --> RX
     
-    RX --> VAL{"Validate Payload Signature & Schema"}
-    VAL -- Invalid / Bad HMAC --> DROP["Log Security Warning & Drop Frame"]
-    VAL -- Valid --> NORM["Normalize into Universal SystemEvent"]
+    RX --> VAL{"Xác thực Chữ ký Payload & Schema"}
+    VAL -- Không hợp lệ / Lỗi HMAC --> DROP["Ghi Log Cảnh báo An ninh & Hủy Gói"]
+    VAL -- Hợp lệ --> NORM["Chuẩn hóa thành SystemEvent Thống nhất"]
     
-    NORM --> DEDUP{"Check Event UUID in LRU Cache"}
-    DEDUP -- Duplicate --> DISCARD["Discard Duplicate Event"]
-    DEDUP -- Unique --> PROC["Forward to Event Processor Queue"]
+    NORM --> DEDUP{"Kiểm tra UUID Sự kiện trong Cache LRU"}
+    DEDUP -- Trùng lặp --> DISCARD["Hủy Sự kiện Trùng lặp"]
+    DEDUP -- Duy nhất --> PROC["Chuyển vào Hàng chờ Event Processor"]
     
-    PROC --> PERSIST["Storage Adapter -> SQLite DB"]
+    PROC --> PERSIST["Storage Adapter -> CSDL SQLite"]
     PROC --> RISK["Deterministic Risk Engine"]
-    RISK --> WS["Realtime WS Broadcast to Dashboard"]
+    RISK --> WS["Realtime WS Broadcast tới Dashboard"]
 ```
 
 ---
 
-## 3. Resilience & Recovery Capabilities
+## 3. Khả năng Kháng lỗi & Phục hồi (Resilience & Recovery)
 
-1. **Automatic Startup Recovery:** Gateway operates under `systemd` process supervision with auto-restart on panic/crash within 2 seconds.
-2. **Offline Buffer Queuing:** If the local database locks or disk writes fail, incoming normalized events are temporarily appended to an in-memory Ring Buffer (capacity: 10,000 events).
-3. **Hardware Watchdog:** Raspberry Pi hardware watchdog timer enabled (`bcm2835_wdt`) to trigger physical reboot if system locks up completely for $>15$ seconds.
+1. **Tự động Khôi phục khi Khởi động:** Gateway vận hành dưới sự giám sát tiến trình của `systemd`, tự động restart khi gặp lỗi panic/crash trong vòng 2 giây.
+2. **Hàng chờ Bộ đệm Offline (Offline Buffer Queuing):** Nếu CSDL local bị khóa hoặc lỗi ghi đĩa, các sự kiện đã chuẩn hóa sẽ tạm thời được đẩy vào một Ring Buffer bộ nhớ in-memory (sức chứa: 10,000 sự kiện).
+3. **Hardware Watchdog:** Bật bộ đếm thời gian hardware watchdog trên Raspberry Pi (`bcm2835_wdt`) để kích hoạt reboot phần cứng nếu hệ thống bị treo cứng quá $>15$ giây.

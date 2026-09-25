@@ -1,46 +1,46 @@
-# 07 - Event Generation & Temporal State Engine
+# 07 - Tạo Sự kiện & Temporal State Engine (Event Generation)
 
-> **Document Status:** `[DECISION]` Event Pipeline & Data Serialization Specification  
+> **Trạng thái Tài liệu:** `[DECISION]` Đặc tả Pipeline Sự kiện & JSON Serialization  
 
 ---
 
-## 1. Formal Event Generation Pipeline
+## 1. Pipeline Tạo Sự kiện Chuẩn hóa (Formal Event Pipeline)
 
-To eliminate false-alarm spam, raw frame inferences are processed through a deterministic temporal state machine before creating a network payload:
+Để triệt tiêu các thông báo rác báo động giả, các suy luận thô theo từng frame được xử lý qua một state machine định tính trước khi đóng gói gửi qua mạng:
 
 ```mermaid
 stateDiagram-v2
-    [*] --> CLEAR: System Init / Idle
+    [*] --> CLEAR: Khởi tạo Hệ thống / Idle
 
-    CLEAR --> OBSERVING: Detection Score >= 0.75 (Frame 1)
-    OBSERVING --> CLEAR: Detection Score < 0.75 (Frame Drop)
+    CLEAR --> OBSERVING: Score Nhận diện >= 0.75 (Frame 1)
+    OBSERVING --> CLEAR: Score Nhận diện < 0.75 (Bỏ Frame)
     
-    OBSERVING --> CONFIRMED: Consecutive Frame Count = 3
-    CONFIRMED --> EVENT_TRIGGERED: Emit SYSTEM_EVENT JSON
+    OBSERVING --> CONFIRMED: Số Frame Liên tiếp khớp = 3
+    CONFIRMED --> EVENT_TRIGGERED: Phát SYSTEM_EVENT JSON
 
-    EVENT_TRIGGERED --> ACTIVE_HOLD: Cooldown Hysteresis Timer Active (5s)
+    EVENT_TRIGGERED --> ACTIVE_HOLD: Đếm giờ Cooldown Hysteresis Active (5s)
     
-    ACTIVE_HOLD --> ACTIVE_HOLD: Continued Detection
-    ACTIVE_HOLD --> CLEAR: Cooldown Expired & No Detection for 5s
+    ACTIVE_HOLD --> ACTIVE_HOLD: Tiếp tục Nhận diện được
+    ACTIVE_HOLD --> CLEAR: Hết giờ Cooldown & 0 Nhận diện trong 5s
 ```
 
 ---
 
-## 2. Temporal Engine Parameters
+## 2. Tham số Bộ máy Temporal Engine
 
-| Parameter Name | Value | Purpose | Architectural Status |
+| Tên Tham số | Giá trị | Mục đích Phục vụ | Trạng thái Kiến trúc |
 | :--- | :--- | :--- | :--- |
-| `CONFIDENCE_THRESHOLD` | `0.75` | Minimum Softmax score for single-frame detection | `[DECISION]` |
-| `CONSECUTIVE_FRAMES` | `3` | Required consecutive positive matches ($N=3$) | `[DECISION]` |
-| `COOLDOWN_WINDOW_MS` | `5000` | Delay before allowing state drop or duplicate re-emission | `[DECISION]` |
-| `HYSTERESIS_MARGIN` | `0.15` | Drop threshold is $0.75 - 0.15 = 0.60$ during active hold | `[DECISION]` |
-| `HEARTBEAT_INTERVAL_MS`| `30000` | Periodic keep-alive ping when state remains unchanged | `[DECISION]` |
+| `CONFIDENCE_THRESHOLD` | `0.75` | Ngón Softmax tối thiểu cho nhận diện 1 frame | `[DECISION]` |
+| `CONSECUTIVE_FRAMES` | `3` | Số frame nhận diện dương tính liên tiếp bắt buộc ($N=3$) | `[DECISION]` |
+| `COOLDOWN_WINDOW_MS` | `5000` | Thời gian chờ trước khi cho phép hạ trạng thái hoặc phát trùng | `[DECISION]` |
+| `HYSTERESIS_MARGIN` | `0.15` | Ngưỡng hạ trạng thái là $0.75 - 0.15 = 0.60$ khi đang hold | `[DECISION]` |
+| `HEARTBEAT_INTERVAL_MS`| `30000` | Tín hiệu ping duy trì khi trạng thái không đổi | `[DECISION]` |
 
 ---
 
-## 3. Formal System Event JSON Schema
+## 3. Schema JSON Chuẩn hóa cho Sự kiện Hệ thống
 
-When state transitions to `EVENT_TRIGGERED`, the node generates a strictly typed JSON payload:
+Khi trạng thái chuyển sang `EVENT_TRIGGERED`, nút thiết bị tạo ra một payload JSON được định kiểu nghiêm ngặt:
 
 ```json
 {
@@ -51,26 +51,26 @@ When state transitions to `EVENT_TRIGGERED`, the node generates a strictly typed
     "event_id": {
       "type": "string",
       "format": "uuid",
-      "description": "Unique V4 UUID generated at event origin for deduplication and idempotency"
+      "description": "Mã V4 UUID duy nhất tạo tại thiết bị để khử trùng lặp và đảm bảo tính idempotency"
     },
     "schema_version": {
       "type": "string",
       "enum": ["1.0.0"],
-      "description": "Semantic versioning tag for backwards compatibility"
+      "description": "Tag phiên bản schema để đảm bảo tương thích ngược"
     },
     "device_id": {
       "type": "string",
       "example": "ESP32CAM-ZONE1-FRONTDOOR",
-      "description": "Unique hardware MAC-derived identifier"
+      "description": "Định danh phần cứng duy nhất suy ra từ địa chỉ MAC"
     },
     "timestamp_ms": {
       "type": "integer",
-      "description": "Epoch timestamp in milliseconds at temporal trigger moment"
+      "description": "Thời gian Epoch tính bằng miligiây tại thời điểm kích hoạt"
     },
     "sequence_number": {
       "type": "integer",
       "minimum": 1,
-      "description": "Monotonically increasing counter per device for anti-replay & ordering"
+      "description": "Bộ đếm tăng dần liên tục theo thiết bị để chống replay & sắp xếp thứ tự"
     },
     "event_type": {
       "type": "string",
@@ -91,7 +91,7 @@ When state transitions to `EVENT_TRIGGERED`, the node generates a strictly typed
       "type": "number",
       "minimum": 0.0,
       "maximum": 1.0,
-      "description": "Filtered temporal confidence score"
+      "description": "Điểm tin cậy đã lọc qua temporal filter"
     },
     "location_zone": {
       "type": "string",
@@ -123,7 +123,7 @@ When state transitions to `EVENT_TRIGGERED`, the node generates a strictly typed
 
 ---
 
-## 4. Idempotency & Deduplication Rules
+## 4. Quy tắc Idempotency & Deduplication
 
-1. **Gateway Ingest Deduplication:** The Edge Gateway maintains an in-memory Sliding Window LRU Cache of `event_id` strings (TTL = 60 seconds). Any duplicate `event_id` received within the window is silently logged and dropped.
-2. **Sequence Number Verification:** Out-of-order sequence numbers per `device_id` are logged to detect dropped packets or network relay anomalies.
+1. **Khử Trùng lặp tại Gateway Ingest:** Edge Gateway duy trì một bộ nhớ đệm Sliding Window LRU Cache lưu các chuỗi `event_id` (TTL = 60 giây). Bất kỳ `event_id` trùng lặp nào nhận được trong cửa sổ này sẽ bị hủy bỏ lặng lẽ kèm log.
+2. **Kiểm tra Thứ tự Sequence Number:** Sự lệch thứ tự sequence number theo từng `device_id` được ghi log để phát hiện hiện tượng mất gói tin trên không gian không dây.

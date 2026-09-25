@@ -1,39 +1,39 @@
-# 08 - Hybrid Network Architecture
+# 08 - Kiến trúc Mạng Hybrid (Network Architecture)
 
-> **Document Status:** `[DECISION]` Protocol Selection & Channel Architecture  
+> **Trạng thái Tài liệu:** `[DECISION]` Đặc tả Lựa chọn Giao thức & Phân kênh Mạng  
 
 ---
 
-## 1. Network Protocol Evaluation & Decision Matrix
+## 1. Bảng Đánh giá & Ma trận Quyết định Giao thức Mạng
 
-To achieve sub-second emergency response alongside rich dashboard monitoring, the system adopts a **Hybrid Communication Architecture**, matching protocol characteristics to specific operational use cases:
+Để đạt được phản ứng khẩn cấp dưới 1 giây song song với việc giám sát dashboard mượt mà, hệ thống áp dụng **Kiến trúc Truyền thông Hybrid**, khớp đặc tính của từng giao thức với use case cụ thể:
 
-| Protocol | Latency | Router Dependency | Overhead | Payload Size | Primary Use Case in SafeHome | Architectural Decision |
+| Giao thức | Độ trễ (Latency) | Phụ thuộc Router | Overhead | Kích thước Payload | Use Case Chính trong SafeHome | Quyết định Kiến trúc |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| **ESP-NOW** | $<15\text{ ms}$ | **NO** (Peer-to-Peer MAC) | Ultra-Low (250B max) | $<250$ Bytes | Emergency Alarms & Sensor Triggers | `[DECISION]` Primary Emergency Path |
-| **MQTT** | $50-150\text{ ms}$ | YES (Local AP) | Low (Binary Header) | $1-64$ KB | General Sensor Telemetry & Heartbeats | `[DECISION]` Standard Telemetry Path |
-| **WebSocket** | $<30\text{ ms}$ | YES (Local AP) | Low (Post-Handshake) | Flexible | Live Gateway $\leftrightarrow$ UI Dashboard Feed | `[DECISION]` Realtime UI Streaming |
-| **HTTP/REST**| $100-300\text{ ms}$| YES (Local AP) | High (HTTP Headers) | Flexible | Configuration, Historical Logs, Auth | `[DECISION]` Management API Path |
-| **UDP** | $<20\text{ ms}$ | YES (Local AP) | Minimal | Flexible | Video Snapshot Frame Streaming (Opt) | `[EXPERIMENT]` Video Burst Stream |
-| **TCP** | $50-200\text{ ms}$ | YES (Local AP) | Moderate | Flexible | Bulk Database Sync | `[DECISION]` System Logging |
+| **ESP-NOW** | $<15\text{ ms}$ | **KHÔNG** (Peer-to-Peer MAC) | Cực thấp (Max 250B) | $<250$ Bytes | Cảnh báo Khẩn cấp & Cảm biến kích hoạt | `[DECISION]` Kênh Khẩn cấp Chính |
+| **MQTT** | $50-150\text{ ms}$ | CÓ (Local AP) | Thấp (Binary Header) | $1-64$ KB | Telemetry Cảm biến & Heartbeats | `[DECISION]` Kênh Telemetry Tiêu chuẩn |
+| **WebSocket** | $<30\text{ ms}$ | CÓ (Local AP) | Thấp (Post-Handshake) | Linh hoạt | Stream realtime Gateway $\leftrightarrow$ UI Dashboard | `[DECISION]` Kênh Streaming UI Realtime |
+| **HTTP/REST**| $100-300\text{ ms}$| CÓ (Local AP) | Cao (HTTP Headers) | Linh hoạt | Cấu hình, Truy vấn Log, Xác thực Auth | `[DECISION]` Kênh API Quản lý |
+| **UDP** | $<20\text{ ms}$ | CÓ (Local AP) | Tối thiểu | Linh hoạt | Stream Snapshot Ảnh tức thì (Tùy chọn) | `[EXPERIMENT]` Luồng Video Burst |
+| **TCP** | $50-200\text{ ms}$ | CÓ (Local AP) | Vừa phải | Linh hoạt | Đồng bộ CSDL khối lượng lớn | `[DECISION]` Hệ thống Logging |
 
 ---
 
-## 2. Hybrid Dual-Path Network Topography
+## 2. Sơ đồ Mạng Phân luồng Kép (Hybrid Dual-Path Topography)
 
 ```mermaid
 graph TD
-    subgraph Path_A ["Path A: Encrypted Emergency Fast-Path (ESP-NOW)"]
-        S1["Smoke Sensor"] -->|Direct P2P Frame| A1["Local Siren Node"]
-        C1["ESP32-S3 CAM"] -->|Direct P2P Frame| A1
-        S1 -->|P2P Broadcast| GW_SERIAL["Gateway ESP32 Receiver Node"]
-        C1 -->|P2P Broadcast| GW_SERIAL
+    subgraph Path_A ["Luồng A: Kênh Khẩn cấp Nhanh Mã hóa (ESP-NOW)"]
+        S1["Cảm biến Khói"] -->|Gói tin P2P Trực tiếp| A1["Nút Còi Local"]
+        C1["Nút ESP32-S3 CAM"] -->|Gói tin P2P Trực tiếp| A1
+        S1 -->|Broadcast P2P| GW_SERIAL["Nút ESP32 Receiver Gateway"]
+        C1 -->|Broadcast P2P| GW_SERIAL
     end
 
-    subgraph Path_B ["Path B: Local Telemetry & Monitoring Path (Wi-Fi 802.11 b/g/n)"]
-        C1 -->|MQTT Topic: telemetry/cam1| BROKER["Local MQTT Broker (Mosquitto)"]
+    subgraph Path_B ["Luồng B: Kênh Telemetry & Giám sát Local (Wi-Fi 802.11 b/g/n)"]
+        C1 -->|MQTT Topic: telemetry/cam1| BROKER["Mosquitto MQTT Broker Local"]
         S1 -->|MQTT Topic: telemetry/smoke1| BROKER
-        BROKER --> GW_ENGINE["Edge Gateway Engine"]
+        BROKER --> GW_ENGINE["Engine Edge Gateway"]
         GW_ENGINE -->|WebSocket Stream| DASHBOARD["Web Dashboard"]
     end
 
@@ -46,8 +46,8 @@ graph TD
 
 ---
 
-## 3. Wi-Fi Channel Selection & Coexistence Strategy
+## 3. Chiến lược Khóa Kênh Wi-Fi & Đồng tồn tại (Coexistence Strategy)
 
-1. **RF Channel Lock:** All ESP32 nodes using both ESP-NOW and Wi-Fi MUST lock their Wi-Fi radio to a fixed 2.4GHz Wi-Fi channel (e.g., **Channel 6, 2437 MHz**). `[DECISION]`
-   * *Rationale:* ESP-NOW requires transmitter and receiver radios to operate on identical RF channels. If Wi-Fi channel hops automatically, ESP-NOW frames will be dropped.
-2. **Coexistence Rules:** When an ESP32 camera node streams MQTT telemetry over standard Wi-Fi, the ESP-NOW protocol stack retains pre-allocated RF interrupt priority to preempt outgoing MQTT TCP packets immediately upon an emergency trigger.
+1. **Khóa Cố định Kênh RF (RF Channel Lock):** Tất cả các nút ESP32 sử dụng đồng thời ESP-NOW và Wi-Fi BẮT BUỘC phải khóa cứng chip radio ở một kênh Wi-Fi 2.4GHz cố định (ví dụ: **Channel 6, 2437 MHz**). `[DECISION]`
+   * *Lý do:* ESP-NOW yêu cầu radio phát và radio nhận phải vận hành trên cùng một kênh RF giống hệt nhau. Nếu kênh Wi-Fi tự động nhảy, các gói tin ESP-NOW sẽ bị rơi.
+2. **Quy tắc Ưu tiên Ngắt:** Khi một nút camera ESP32 đang stream telemetry MQTT qua Wi-Fi tiêu chuẩn, stack giao thức ESP-NOW vẫn duy trì quyền ưu tiên ngắt RF pre-allocated để lập tức chiếm dụng phần cứng phát gói tin khẩn cấp ngay khi có sự cố.

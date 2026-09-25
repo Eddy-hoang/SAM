@@ -1,45 +1,45 @@
-# 03 - System Architecture
+# 03 - Kiến trúc Hệ thống (System Architecture)
 
-> **Document Status:** `[DECISION]` Primary System Architecture Specification  
-> **Modeling Standard:** C4 Model (Context, Container, Component, Deployment)  
+> **Trạng thái Tài liệu:** `[DECISION]` Đặc tả Kiến trúc Hệ thống Chính  
+> **Tiêu chuẩn Mô hình hóa:** Mô hình C4 (Context, Container, Component, Deployment)  
 
 ---
 
-## 1. Multi-Layer Functional Breakdown
+## 1. Phân chia Chức năng Đa tầng (Multi-Layer Functional Breakdown)
 
-The SafeHome AI Mesh architecture is organized into 6 distinct, decoupled functional layers:
+Kiến trúc SafeHome AI Mesh được tổ chức thành 6 tầng chức năng độc lập, giảm thiểu phụ thuộc lẫn nhau:
 
 ```text
 ┌──────────────────────────────────────────────────────────────────────────┐
-│ 6. Application Layer (Web Monitoring Dashboard, Mobile Alert UI)        │
+│ 6. Tầng Ứng dụng (Web Monitoring Dashboard, Mobile Alert UI)            │
 ├──────────────────────────────────────────────────────────────────────────┤
-│ 5. Data & Storage Layer (TimescaleDB / SQLite, Event Store, Config DB)   │
+│ 5. Tầng Dữ liệu & Lưu trữ (TimescaleDB / SQLite, Event Store, Config DB) │
 ├──────────────────────────────────────────────────────────────────────────┤
-│ 4. Gateway Processing Layer (Event Normalizer, Risk Engine, Safety Policy)│
+│ 4. Tầng Xử lý Gateway (Event Normalizer, Risk Engine, Safety Policy)     │
 ├──────────────────────────────────────────────────────────────────────────┤
-│ 3. Communication Layer (ESP-NOW Encrypted Fast-Path, MQTT / WebSockets)  │
+│ 3. Tầng Truyền thông (ESP-NOW Encrypted Fast-Path, MQTT / WebSockets)    │
 ├──────────────────────────────────────────────────────────────────────────┤
-│ 2. Edge Vision & Sensor Layer (ESP32-S3 Edge AI, PIR, Reed, Smoke Nodes)│
+│ 2. Tầng Cảm biến & Edge Vision (ESP32-S3 Edge AI, PIR, Reed, Smoke Nodes)│
 ├──────────────────────────────────────────────────────────────────────────┤
-│ 1. Physical Hardware Layer (ESP32 Silicon, Camera Sensors, Sirens/Relays)│
+│ 1. Tầng Phần cứng Vật lý (Vi điều khiển ESP32, Camera, Còi/Relay)       │
 └──────────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## 2. C4 Context Diagram (Level 1)
+## 2. Sơ đồ C4 Context Diagram (Mức 1)
 
 ```mermaid
 graph TB
-    User["Homeowner / Operator"]
-    System["SafeHome AI Mesh System\n(Edge-First Local Safety Network)"]
-    ExternalAI["Optional External AI Service\n(Cloud VLM / LLM API)"]
-    LocalAlarm["Physical Local Sirens / Relays"]
+    User["Chủ nhà / Người vận hành"]
+    System["Hệ thống SafeHome AI Mesh\n(Mạng An toàn Cục bộ Ưu tiên Edge)"]
+    ExternalAI["Dịch vụ AI Bên ngoài Tùy chọn\n(Cloud VLM / LLM API)"]
+    LocalAlarm["Còi / Relay Báo động Vật lý Local"]
 
-    User -->|Views Alerts, Manages System| System
-    System -->|Sounds Emergency Alarm| LocalAlarm
-    System -.->|Sends Anonymized Metadata for Deep Analysis| ExternalAI
-    ExternalAI -.->|Returns Advisory Insights| System
+    User -->|Xem Cảnh báo, Quản lý Hệ thống| System
+    System -->|Kích hoạt Còi Báo động Khẩn cấp| LocalAlarm
+    System -.->|Gửi Metadata Ẩn danh để Phân tích Sâu| ExternalAI
+    ExternalAI -.->|Trả về Đánh giá Cố vấn| System
 
     classDef primary fill:#2563eb,stroke:#1d4ed8,color:#fff;
     classDef external fill:#475569,stroke:#334155,color:#fff;
@@ -49,40 +49,40 @@ graph TB
 
 ---
 
-## 3. C4 Container Diagram (Level 2)
+## 3. Sơ đồ C4 Container Diagram (Mức 2)
 
 ```mermaid
 graph TB
-    subgraph Edge_Devices ["Edge Device Containers"]
-        CAM["ESP32-S3 Vision Node\n(C++/ESP-IDF + TFLite Micro)"]
-        SENS["Environmental Sensor Node\n(C++/ESP-IDF)"]
-        ALARM["Local Alarm Actuator Node\n(C++/ESP-IDF)"]
+    subgraph Edge_Devices ["Container Thiết bị Edge"]
+        CAM["Nút Vision ESP32-S3\n(C++/ESP-IDF + TFLite Micro)"]
+        SENS["Nút Cảm biến Môi trường\n(C++/ESP-IDF)"]
+        ALARM["Nút Còi Báo động Local\n(C++/ESP-IDF)"]
     end
 
-    subgraph Edge_Gateway_Node ["Edge Gateway Container Host (Raspberry Pi / Mini PC)"]
-        GW_RECV["Message Receiver Service\n(ESP-NOW Serial Bridge & MQTT Broker)"]
-        GW_PROC["Event Processing & State Engine"]
+    subgraph Edge_Gateway_Node ["Host Container Edge Gateway (Raspberry Pi / Mini PC)"]
+        GW_RECV["Dịch vụ Nhận Tin nhắn (Message Receiver)\n(ESP-NOW Serial Bridge & MQTT Broker)"]
+        GW_PROC["Engine Xử lý Sự kiện & Trạng thái (Event Engine)"]
         GW_RISK["Deterministic Risk Engine"]
         GW_POL["Safety Policy & Command Validator"]
         GW_API["REST / WebSocket API Server"]
-        GW_DB[(Local SQLite / TimeSeries DB)]
+        GW_DB[(SQLite / TimeSeries DB Local)]
     end
 
-    subgraph Client_Applications ["User Interface Containers"]
+    subgraph Client_Applications ["Container Ứng dụng Người dùng"]
         DASH["Web Dashboard\n(React / Vite PWA)"]
     end
 
     %% Network Connections
-    CAM -->|ESP-NOW Encrypted Emergency Frame| ALARM
+    CAM -->|Gói tin Khẩn cấp Mã hóa ESP-NOW| ALARM
     CAM -->|ESP-NOW / Wi-Fi Telemetry| GW_RECV
-    SENS -->|ESP-NOW Emergency Trigger| ALARM
+    SENS -->|Kích hoạt Khẩn cấp ESP-NOW| ALARM
     SENS -->|ESP-NOW Telemetry| GW_RECV
 
     GW_RECV --> GW_PROC
     GW_PROC --> GW_RISK
     GW_RISK --> GW_POL
     GW_RISK --> GW_DB
-    GW_POL -->|Validated Relay Command| GW_RECV
+    GW_POL -->|Lệnh Relay đã Kiểm duyệt| GW_RECV
     GW_API --> GW_DB
     GW_PROC -->|WebSocket Event Push| GW_API
     DASH <-->|HTTP REST & WS| GW_API
@@ -98,45 +98,45 @@ graph TB
 
 ---
 
-## 4. System Sequence Diagram: End-to-End Emergency Flow
+## 4. Sơ đồ Tuần tự Hệ thống (Sequence Diagram): Luồng Khẩn cấp End-to-End
 
 ```mermaid
 sequenceDiagram
     autonumber
-    actor Hazard as Physical Threat / Person
-    participant ESP32CAM as ESP32-S3 Vision Node
-    participant AlarmNode as Local Alarm Node
+    actor Hazard as Nguy cơ Vật lý / Người lạ
+    participant ESP32CAM as Nút Vision ESP32-S3
+    participant AlarmNode as Nút Còi Local
     participant Gateway as Edge Gateway
     participant RiskEng as Risk Engine
-    participant DB as Local Database
+    participant DB as Database Local
     participant UI as Web Dashboard
 
-    Hazard->>ESP32CAM: Person enters restricted perimeter
-    ESP32CAM->>ESP32CAM: Capture Frame -> TFLite Inference (Person > 0.85)
-    ESP32CAM->>ESP32CAM: Temporal Filter (3 consecutive matches) -> Generate EVENT
+    Hazard->>ESP32CAM: Người xuất hiện ở khu vực hạn chế
+    ESP32CAM->>ESP32CAM: Bắt Frame -> TFLite Inference (Person Score > 0.85)
+    ESP32CAM->>ESP32CAM: Temporal Filter (3 frames khớp) -> Phát EVENT
     
-    par Priority Emergency Path (<50ms)
-        ESP32CAM->>AlarmNode: Send ESP-NOW Emergency Payload (AES-128, Seq# N)
-        AlarmNode->>AlarmNode: Verify AES Tag & Sequence Number
-        AlarmNode->>AlarmNode: Actuate Siren / Buzzer (GPIO HIGH)
-    and Gateway Reporting Path (<100ms)
-        ESP32CAM->>Gateway: Send Event Metadata via ESP-NOW/MQTT
-        Gateway->>RiskEng: Ingest & Evaluate Event Rules
-        RiskEng->>RiskEng: Update Risk Score (ELEVATED -> HIGH)
-        RiskEng->>DB: Persist Immutable Event Record
-        RiskEng->>UI: Broadcast Realtime Alert via WebSocket
+    par Luồng Ưu tiên Khẩn cấp (<50ms)
+        ESP32CAM->>AlarmNode: Gửi Payload Khẩn cấp ESP-NOW (AES-128, Seq# N)
+        AlarmNode->>AlarmNode: Xác minh Thẻ AES & Sequence Number
+        AlarmNode->>AlarmNode: Kích hoạt Còi / Buzzer (GPIO HIGH)
+    and Luồng Báo cáo Gateway (<100ms)
+        ESP32CAM->>Gateway: Gửi Event Metadata qua ESP-NOW/MQTT
+        Gateway->>RiskEng: Ingest & Đánh giá Quy tắc
+        RiskEng->>RiskEng: Cập nhật Điểm Rủi ro (ELEVATED -> HIGH)
+        RiskEng->>DB: Lưu Bản ghi Sự kiện Bất biến
+        RiskEng->>UI: Broadcast Cảnh báo Realtime qua WebSocket
     end
     
-    UI->>UI: Play Visual/Audio Alert on Operator Screen
+    UI->>UI: Hiển thị Cảnh báo Đỏ & Bật Âm thanh trên Dashboard
 ```
 
 ---
 
-## 5. Architectural Trade-offs & ADR Summary
+## 5. Tóm tắt Đánh đổi Kiến trúc & Hồ sơ ADR
 
-1. **Decoupled Edge Vision vs. Direct Video Streaming:**  
-   * *Decision:* On-device MobileNet inference generating metadata JSON events instead of streaming 24/7 video.
-   * *Trade-off:* Saves network bandwidth and preserves privacy, but prevents remote users from viewing live 4K streams unless an alert state is triggered.
-2. **ESP-NOW Mesh vs. Standard Wi-Fi Infrastructure:**  
-   * *Decision:* ESP-NOW for emergency path, Wi-Fi for telemetry.
-   * *Trade-off:* Requires dedicated MAC peer management on ESP32 nodes, but guarantees sub-50ms transmission even if the home Wi-Fi access point crashes.
+1. **Edge Vision Độc lập vs. Stream Video Trực tiếp:**  
+   * *Quyết định:* Suy luận MobileNet tại thiết bị phát ra metadata JSON sự kiện thay vì stream video 24/7.
+   * *Đánh đổi:* Tiết kiệm băng thông mạng và bảo vệ quyền riêng tư, nhưng người dùng không xem được video 4K trực tiếp ngoại trừ khi có cảnh báo.
+2. **Mạng ESP-NOW Mesh vs. Mạng Wi-Fi Tiêu chuẩn:**  
+   * *Quyết định:* Dùng ESP-NOW cho kênh khẩn cấp, Wi-Fi cho telemetry.
+   * *Đánh đổi:* Cần quản lý bảng địa chỉ MAC của peer trên từng nút ESP32, nhưng đảm bảo tín hiệu truyền dưới 50ms ngay cả khi router Wi-Fi bị sập.

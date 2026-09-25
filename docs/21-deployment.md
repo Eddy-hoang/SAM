@@ -1,12 +1,12 @@
-# 21 - Deployment Architecture & Environments
+# 21 - Kiến trúc Triển khai (Deployment Architecture)
 
-> **Document Status:** `[DECISION]` Deployment Topology & Container Blueprint  
+> **Trạng thái Tài liệu:** `[DECISION]` Mô hình Triển khai & Container Blueprint  
 
 ---
 
-## 1. Deployment Topology Comparison
+## 1. So sánh Các Phương án Triển khai Topology
 
-The system supports 3 explicit deployment profiles tailored for development, live competition demo, and cloud hybrid scaling:
+Hệ thống hỗ trợ 3 profile triển khai được tối ưu hóa cho môi trường phát triển, demo cuộc thi và mở rộng cloud:
 
 ```mermaid
 graph TD
@@ -16,10 +16,10 @@ graph TD
         SIM_NODE <--> DEV_PC
     end
 
-    subgraph Profile_2 ["Profile 2: Edge Local Deployment (Competition Demo)"]
+    subgraph Profile_2 ["Profile 2: Triển khai Edge Local (Mục tiêu Demo Cuộc thi)"]
         RPI["Raspberry Pi 4B / Mini PC\n(Edge Gateway, SQLite, Mosquitto, WS Engine)"]
-        HARDWARE_ESP["Physical ESP32-S3 Nodes\n(ESP-NOW + Local Wi-Fi AP)"]
-        TABLET["Demo Tablet / Laptop\n(Web UI Dashboard)"]
+        HARDWARE_ESP["Nút ESP32-S3 Vật lý\n(ESP-NOW + Local Wi-Fi AP)"]
+        TABLET["Tablet / Laptop Demo\n(Web UI Dashboard)"]
 
         HARDWARE_ESP <--> RPI
         RPI <--> TABLET
@@ -28,23 +28,23 @@ graph TD
 
 ---
 
-## 2. Low-Cost Edge Deployment Blueprint (Profile 2 - Competition Target)
+## 2. Blueprint Triển khai Edge Tiết kiệm Chi phí (Profile 2 - Mục tiêu Demo)
 
-| Component | Target Hardware | Estimated Cost | Installation Method |
+| Thành phần | Phần cứng Mục tiêu | Chi phí Ước tính | Phương pháp Cài đặt |
 | :--- | :--- | :--- | :--- |
-| **Edge Gateway Host** | Raspberry Pi 4B (2GB/4GB) or Used Mini PC (Intel N100) | ~$45 – $75 | Docker Containers / `systemd` services on Ubuntu 22.04 |
-| **MQTT Broker** | Eclipse Mosquitto | $0 (Open Source) | Lightweight Docker Container (`mosquitto:latest`) |
-| **Database** | SQLite 3 / Embedded TimescaleDB | $0 (Open Source) | Single local file storage on High-End MicroSD / NVMe SSD |
-| **Gateway Runtime** | Node.js (TypeScript) / Python runtime | $0 (Open Source) | Executed as supervised system service |
-| **Vision Sensor** | ESP32-S3 CAM N16R8 | ~$7 – $9 per node | Flashed via USB-C (ESP-IDF / PlatformIO) |
+| **Edge Gateway Host** | Raspberry Pi 4B (2GB/4GB) hoặc Mini PC dùng lướt (Intel N100) | ~$45 – $75 | Docker Containers / dịch vụ `systemd` trên Ubuntu 22.04 |
+| **MQTT Broker** | Eclipse Mosquitto | $0 (Mã nguồn mở) | Docker Container nhẹ (`mosquitto:latest`) |
+| **Cơ sở Dữ liệu** | SQLite 3 / Embedded TimescaleDB | $0 (Mã nguồn mở) | File lưu trữ cục bộ duy nhất trên Thẻ nhớ MicroSD xịn / NVMe SSD |
+| **Gateway Runtime** | Node.js (TypeScript) / Python runtime | $0 (Mã nguồn mở) | Chạy dạng tiến trình giám sát hệ thống |
+| **Cảm biến Vision** | ESP32-S3 CAM N16R8 | ~$7 – $9 mỗi nút | Nạp mạch qua USB-C (ESP-IDF / PlatformIO) |
 
 ---
 
-## 3. Technology Decision Matrix
+## 3. Ma trận Quyết định Lựa chọn Công nghệ (Technology Decision Matrix)
 
-| Domain | Evaluated Options | Selected Option | Primary Decision Rationale |
+| Lĩnh vực | Các Phương án Đánh giá | Lựa chọn Đã chốt | Lý do Quyết định Cốt lõi |
 | :--- | :--- | :--- | :--- |
-| **Backend Runtime** | Node.js vs. Python vs. Go | **Node.js (TypeScript)** `[DECISION]` | Asynchronous I/O performance, native WebSocket support, unified language with frontend. |
-| **Database** | SQLite vs. PostgreSQL vs. Redis | **SQLite (WAL Mode)** `[DECISION]` | Zero memory footprint, zero server administration, robust ACID transactions for edge. |
-| **MQTT Broker** | Mosquitto vs. EMQX vs. VerneMQ | **Mosquitto** `[DECISION]` | Minimal memory footprint (<10MB RAM), student-friendly configuration. |
-| **UI Framework** | React + Vite vs. Next.js vs. Vue | **React + Vite PWA** `[DECISION]` | Blazing fast build time, offline PWA caching support, zero server-side rendering complexity. |
+| **Backend Runtime** | Node.js vs. Python vs. Go | **Node.js (TypeScript)** `[DECISION]` | Hiệu năng Async I/O cao, hỗ trợ native WebSocket mượt, đồng nhất ngôn ngữ với frontend. |
+| **Cơ sở Dữ liệu** | SQLite vs. PostgreSQL vs. Redis | **SQLite (WAL Mode)** `[DECISION]` | Dung lượng RAM bằng 0, không cần quản trị server, giao dịch ACID tin cậy tại Edge. |
+| **MQTT Broker** | Mosquitto vs. EMQX vs. VerneMQ | **Mosquitto** `[DECISION]` | Chiếm ít RAM cực kỳ (<10MB RAM), cấu hình đơn giản phù hợp sinh viên. |
+| **UI Framework** | React + Vite vs. Next.js vs. Vue | **React + Vite PWA** `[DECISION]` | Tốc độ build siêu nhanh, hỗ trợ PWA offline caching, không phức tạp như SSR. |

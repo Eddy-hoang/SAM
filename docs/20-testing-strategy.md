@@ -1,67 +1,67 @@
-# 20 - System Testing Strategy & Validation Matrix
+# 20 - Chiến lược Kiểm thử Hệ thống (Testing Strategy)
 
-> **Document Status:** `[DECISION]` Comprehensive Test Plan  
+> **Trạng thái Tài liệu:** `[DECISION]` Kế hoạch Kiểm thử Toàn diện  
 
 ---
 
-## 1. Multi-Layer Testing Architecture
+## 1. Kiến trúc Kiểm thử Đa tầng (Multi-Layer Testing)
 
 ```text
   ┌────────────────────────────────────────────────────────┐
-  │ 10. Competition Demo Scenario Validation Run (End-to-End)│
+  │ 10. Chạy Kịch bản Demo Cuộc thi End-to-End             │
   ├────────────────────────────────────────────────────────┤
-  │ 9. Hardware-in-the-Loop (HIL) Latency & Load Testing   │
+  │ 9. Kiểm thử Độ trễ & Tải Hardware-in-the-Loop (HIL)   │
   ├────────────────────────────────────────────────────────┤
-  │ 8. Security & Penetration Testing (Replay / Spoofing)   │
+  │ 8. Kiểm thử An ninh & Thâm nhập (Replay / Spoofing)    │
   ├────────────────────────────────────────────────────────┤
-  │ 7. Network Fault-Injection & Outage Tests              │
+  │ 7. Kiểm thử Tiêm Lỗi Mạng & Sự cố Gián đoạn (Outage)   │
   ├────────────────────────────────────────────────────────┤
-  │ 6. AI Model Precision & Quantization Benchmark Tests   │
+  │ 6. Benchmark Độ chính xác Mô hình AI & Lượng hóa INT8  │
   ├────────────────────────────────────────────────────────┤
-  │ 5. API & WebSocket Realtime Integration Tests          │
+  │ 5. Kiểm thử Tích hợp API & Realtime WebSocket Stream   │
   ├────────────────────────────────────────────────────────┤
-  │ 4. Deterministic Risk Engine Rule Matrix Tests         │
+  │ 4. Kiểm thử Ma trận Quy tắc Deterministic Risk Engine  │
   ├────────────────────────────────────────────────────────┤
-  │ 3. Temporal State Machine & Debounce Engine Tests      │
+  │ 3. Kiểm thử Temporal State Machine & Engine Debounce   │
   ├────────────────────────────────────────────────────────┤
-  │ 2. ESP-NOW Binary Protocol Framing Unit Tests          │
+  │ 2. Kiểm thử Unit Đóng gói Frame Nhị phân ESP-NOW       │
   ├────────────────────────────────────────────────────────┤
-  │ 1. Core Data Model & Schema Validation Unit Tests       │
+  │ 1. Kiểm thử Unit Data Model & Schema Validation        │
   └────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## 2. Test Execution Matrix
+## 2. Ma trận Thực thi Kiểm thử (Test Execution Matrix)
 
-| Test ID | Test Category | Target Component | Description & Acceptance Criteria | Requirement Ref |
+| Mã Test ID | Thể loại Test | Thành phần Mục tiêu | Mô tả & Tiêu chí Nghiệm thu | Tham chiếu Yêu cầu |
 | :--- | :--- | :--- | :--- | :--- |
-| `TEST-AI-01` | AI Model Test | `ESP32-S3 CAM` | Verify TFLite INT8 inference returns $>0.85$ score for human in frame; execution time $<150\text{ ms}$. | REQ-001, REQ-021 |
-| `TEST-STATE-01`| Unit Test | `Temporal Engine` | Verify temporal state requires $N=3$ consecutive frames before generating `SYSTEM_EVENT`. | REQ-012 |
-| `TEST-NET-01` | Protocol Test | `ESP-NOW Mesh` | Measure ESP-NOW P2P transmission latency from trigger to alarm receive ($<30\text{ ms}$ over 100 trials). | REQ-002, REQ-010 |
-| `TEST-SEC-01` | Security Test | `Gateway / Node` | Inject replayed ESP-NOW frame with old sequence number; verify node drops packet. | REQ-030 |
-| `TEST-GW-01` | Integration | `Risk Engine` | Correlate PIR motion + Vision event within 10s; verify Risk Score transitions to 65 (`HIGH`). | REQ-003 |
-| `TEST-FAIL-01` | Resilience | `System Mesh` | Disconnect Wi-Fi Router during active alert; verify local alarm siren activates normally via ESP-NOW. | REQ-011 |
-| `TEST-E2E-01` | End-to-End | `Complete System` | Trigger smoke sensor $\rightarrow$ verify siren sounds $<50\text{ ms}$ and UI updates dashboard $<100\text{ ms}$. | All REQs |
+| `TEST-AI-01` | AI Model Test | `ESP32-S3 CAM` | Kiểm tra suy luận TFLite INT8 trả về score $>0.85$ khi có người; thời gian suy luận $<150\text{ ms}$. | REQ-001, REQ-021 |
+| `TEST-STATE-01`| Unit Test | `Temporal Engine` | Kiểm tra temporal state yêu cầu đủ $N=3$ frame liên tiếp trước khi phát ra `SYSTEM_EVENT`. | REQ-012 |
+| `TEST-NET-01` | Protocol Test | `ESP-NOW Mesh` | Đo độ trễ truyền P2P ESP-NOW từ kích hoạt đến còi nhận ($<30\text{ ms}$ trên 100 lần thử). | REQ-002, REQ-010 |
+| `TEST-SEC-01` | Security Test | `Gateway / Node` | Tiêm gói tin ESP-NOW bị replay chứa sequence number cũ; xác nhận nút hủy gói. | REQ-030 |
+| `TEST-GW-01` | Integration | `Risk Engine` | Kết hợp PIR chuyển động + Vision event trong 15s; xác nhận Risk Score nhảy lên 65 (`HIGH`). | REQ-003 |
+| `TEST-FAIL-01` | Resilience | `System Mesh` | Rút cáp Wi-Fi Router khi đang có alert; xác nhận còi báo động local vẫn bật qua ESP-NOW. | REQ-011 |
+| `TEST-E2E-01` | End-to-End | `Toàn bộ Hệ thống`| Kích hoạt cảm biến khói $\rightarrow$ xác nhận còi kêu $<50\text{ ms}$ và UI update dashboard $<100\text{ ms}$. | Tất cả REQs |
 
 ---
 
-## 3. End-to-End Test Execution Trace
+## 3. Vết Thực thi Kiểm thử End-to-End Trace
 
 ```text
-[Camera Frame Input] 
+[Đầu vào Frame Camera] 
        │
        ▼ (TEST-AI-01: Score = 0.88)
 [Temporal State Engine] 
        │
-       ▼ (TEST-STATE-01: 3 Consecutive Inferences -> Emit Event)
-[ESP-NOW Emergency Transport] 
+       ▼ (TEST-STATE-01: 3 Inferences Liên tiếp -> Phát Event)
+[Vận chuyển Khẩn cấp ESP-NOW] 
        │
-       ▼ (TEST-NET-01: Latency = 14ms -> Local Siren Triggers)
-[Gateway Processing Engine] 
+       ▼ (TEST-NET-01: Độ trễ = 14ms -> Còi Local Bật)
+[Engine Xử lý Gateway] 
        │
-       ▼ (TEST-GW-01: Evaluate Rules -> Risk = HIGH -> Save DB)
+       ▼ (TEST-GW-01: Đánh giá Rules -> Risk = HIGH -> Lưu CSDL)
 [WebSocket Server] 
        │
-       ▼ (TEST-UI-01: Push JSON -> Render Visual Red Alert Banner)
+       ▼ (TEST-UI-01: Push JSON -> Hiển thị Banner Cảnh báo Đỏ trên UI)
 ```

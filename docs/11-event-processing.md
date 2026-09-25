@@ -1,35 +1,35 @@
-# 11 - Event Processing Pipeline
+# 11 - Pipeline Xử lý Sự kiện (Event Processing Pipeline)
 
-> **Document Status:** `[DECISION]` Event Queue & Normalization Specification  
+> **Trạng thái Tài liệu:** `[DECISION]` Đặc tả Hàng chờ Sự kiện & Chuẩn hóa  
 
 ---
 
-## 1. Event Ingest Queue Architecture
+## 1. Kiến trúc Hàng chờ Ingest Queue
 
-To prevent event drops during traffic bursts (e.g., multiple sensors triggering simultaneously), incoming messages pass through an in-memory Asynchronous Queue:
+Để tránh mất sự kiện khi có bùng nổ dữ liệu (ví dụ: nhiều cảm biến bị kích hoạt cùng lúc), các tin nhắn gửi đến được đưa qua một Hàng chờ Bất đồng bộ (Asynchronous Queue) lưu trong bộ nhớ:
 
 ```text
-Incoming Payload ──> Schema Validator ──> LRU Deduplicator ──> In-Memory Queue (FIFO) ──> Event Processor
+Payload Gửi đến ──> Schema Validator ──> LRU Deduplicator ──> In-Memory Queue (FIFO) ──> Event Processor
 ```
 
 ---
 
-## 2. Ingest Queue Parameters
+## 2. Tham số Hàng chờ Ingest Queue
 
-| Configuration Key | Parameter Value | Architectural Rationale |
+| Khóa Cấu hình | Giá trị Tham số | Lý do Kiến trúc |
 | :--- | :--- | :--- |
-| `MAX_QUEUE_DEPTH` | `1000 Events` | Prevents RAM exhaustion during processing delays |
-| `DEDUP_WINDOW_TTL_MS`| `60000 ms` | Deduplication window lifetime for V4 UUIDs |
-| `MAX_CLOCK_DRIFT_MS`| `30000 ms` | Maximum allowed timestamp divergence from Gateway time |
-| `CONCURRENCY_WORKERS`| `4 Threads` | Dedicated worker pool processing events |
+| `MAX_QUEUE_DEPTH` | `1000 Events` | Tránh tràn RAM khi xử lý bị trễ |
+| `DEDUP_WINDOW_TTL_MS`| `60000 ms` | Thời gian sống của cửa sổ khử trùng lặp cho V4 UUID |
+| `MAX_CLOCK_DRIFT_MS`| `30000 ms` | Độ lệch thời gian tối đa cho phép so với giờ Gateway |
+| `CONCURRENCY_WORKERS`| `4 Threads` | Pool các luồng công việc xử lý sự kiện đồng thời |
 
 ---
 
-## 3. Idempotency & Sequence Order Rules
+## 3. Quy tắc Idempotency & Kiểm tra Thứ tự Sequence Number
 
-1. **UUID Uniqueness:** Every event contains an `event_id` (V4 UUID). Gateway drops any incoming event matching an active `event_id` in the deduplication cache.
-2. **Sequence Gap Detection:**
-   * Gateway tracks `last_seen_seq` per `device_id`.
-   * If `incoming_seq == last_seen_seq + 1`: Process normally.
-   * If `incoming_seq > last_seen_seq + 1`: Log `WARNING_PACKET_LOSS` (packets dropped over air).
-   * If `incoming_seq <= last_seen_seq`: Log `SECURITY_ALERT_REPLAY_ATTEMPT` and immediately drop payload.
+1. **Tính Duy nhất của UUID:** Mỗi sự kiện chứa một `event_id` (V4 UUID). Gateway sẽ hủy bỏ bất kỳ sự kiện nào gửi tới trùng với `event_id` đang active trong cache khử trùng lặp.
+2. **Phát hiện Lệch Sequence Number:**
+   * Gateway theo dõi `last_seen_seq` theo từng `device_id`.
+   * Nếu `incoming_seq == last_seen_seq + 1`: Xử lý bình thường.
+   * Nếu `incoming_seq > last_seen_seq + 1`: Ghi log `WARNING_PACKET_LOSS` (phát hiện mất gói tin trên không gian mạng).
+   * Nếu `incoming_seq <= last_seen_seq`: Ghi log `SECURITY_ALERT_REPLAY_ATTEMPT` và hủy bỏ gói tin ngay lập tức.

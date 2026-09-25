@@ -1,26 +1,26 @@
-# ADR-0002: Dual-Path Hybrid Network Strategy (ESP-NOW + Wi-Fi)
+# ADR-0002: Chiến lược Mạng Hybrid Phân luồng Kép (ESP-NOW + Wi-Fi)
 
-## Context
-Emergency alarms require microsecond-level latency and zero router dependency, whereas administrative monitoring dashboards require rich state telemetry streaming.
+## Bối cảnh (Context)
+Các cảnh báo khẩn cấp yêu cầu độ trễ ở mức microsecond và không phụ thuộc vào router, trong khi các dashboard quản lý lại cần luồng telemetry dữ liệu trạng thái dồi dào.
 
-## Problem
-What network protocols should be selected for device-to-device emergency signaling versus device-to-gateway telemetry reporting?
+## Vấn đề (Problem)
+Nên chọn các giao thức mạng nào cho việc truyền phát cảnh báo khẩn cấp giữa các thiết bị so với báo cáo telemetry về gateway?
 
-## Considered Options
-1. **Wi-Fi Only (MQTT/HTTP):** All nodes communicate exclusively over standard 802.11 Wi-Fi.
-2. **ESP-NOW Only:** All communications (including telemetry and images) use ESP-NOW.
-3. **Dual-Path Hybrid Architecture:** ESP-NOW for emergency alarm channels; Wi-Fi (MQTT + WebSockets) for telemetry and UI streaming.
+## Các Phương án Đánh giá (Considered Options)
+1. **Chỉ dùng Wi-Fi (MQTT/HTTP):** Tất cả các nút giao tiếp duy nhất qua mạng Wi-Fi 802.11 tiêu chuẩn.
+2. **Chỉ dùng ESP-NOW:** Tất cả truyền thông (bao gồm telemetry và hình ảnh) dùng ESP-NOW.
+3. **Kiến trúc Hybrid Phân luồng Kép:** ESP-NOW cho kênh còi báo động khẩn cấp; Wi-Fi (MQTT + WebSockets) cho telemetry và streaming giao diện UI.
 
-## Decision
-We select **Option 3: Dual-Path Hybrid Architecture**.
+## Quyết định (Decision)
+Lựa chọn **Phương án 3: Kiến trúc Hybrid Phân luồng Kép**.
 
-## Why
-* ESP-NOW bypasses Wi-Fi AP association and DHCP overhead, delivering sub-15ms emergency frames.
-* MQTT over local Wi-Fi handles structured telemetry JSON objects efficiently.
-* If Wi-Fi AP crashes, ESP-NOW emergency channels remain 100% operational.
+## Lý do (Why)
+* ESP-NOW bỏ qua các thủ tục bắt tay Wi-Fi AP và cấp phát DHCP, truyền frame khẩn cấp dưới 15ms.
+* MQTT qua Wi-Fi local xử lý các đối tượng telemetry JSON cấu trúc hiệu quả.
+* Nếu router Wi-Fi sập, kênh còi khẩn cấp ESP-NOW vẫn hoạt động 100%.
 
-## Trade-offs
-* All ESP32 Wi-Fi radios must be locked to a fixed 2.4GHz Wi-Fi channel (Channel 6).
+## Đánh đổi (Trade-offs)
+* Tất cả chip radio Wi-Fi của ESP32 phải khóa cố định ở một kênh Wi-Fi 2.4GHz (Channel 6).
 
-## Status
-`[DECISION]` Accepted & Approved.
+## Trạng thái (Status)
+`[DECISION]` Đã phê duyệt & Thông qua.

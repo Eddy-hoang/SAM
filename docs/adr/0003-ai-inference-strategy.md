@@ -1,21 +1,21 @@
-# ADR-0003: On-Device INT8 Quantized Model Execution
+# ADR-0003: Thực thi Mô hình Lượng hóa INT8 trên Thiết bị (On-Device AI)
 
-## Context
-Deploying vision AI to microcontrollers requires balancing inference accuracy against strict SRAM/PSRAM boundaries and CPU thermal limits.
+## Bối cảnh (Context)
+Triển khai vision AI lên vi điều khiển đòi hỏi cân bằng giữa độ chính xác suy luận với giới hạn bộ nhớ SRAM/PSRAM khắt khe và ngưỡng tản nhiệt CPU.
 
-## Problem
-Which model quantization and execution runtime strategy should be adopted on the ESP32-S3?
+## Vấn đề (Problem)
+Chiến lược lượng hóa mô hình và runtime thực thi nào nên được áp dụng trên chip ESP32-S3?
 
-## Considered Options
-1. **FP32 Floating Point Model:** Native 32-bit floating point model execution.
-2. **INT8 Quantized Model with TFLite Micro:** Post-training INT8 quantization executed via TensorFlow Lite for Microcontrollers with ESP-NN SIMD vector acceleration.
+## Các Phương án Đánh giá (Considered Options)
+1. **Mô hình Dấu phẩy động FP32 (FP32 Floating Point):** Thực thi mô hình dạng dấu phẩy động 32-bit gốc.
+2. **Mô hình Lượng hóa INT8 với TFLite Micro:** Post-training INT8 quantization thực thi qua TensorFlow Lite for Microcontrollers kết hợp tăng tốc tập lệnh SIMD vector ESP-NN.
 
-## Decision
-We select **Option 2: INT8 Quantized TFLite Micro**.
+## Quyết định (Decision)
+Lựa chọn **Phương án 2: Mô hình Lượng hóa INT8 với TFLite Micro**.
 
-## Why
-* INT8 quantization reduces binary model size by $75\%$ (from 8.4MB to 2.1MB), fitting into Flash memory.
-* ESP-NN SIMD vector instructions reduce inference latency from $>500\text{ ms}$ to $<150\text{ ms}$.
+## Lý do (Why)
+* Lượng hóa INT8 giảm kích thước binary mô hình đi $75\%$ (từ 8.4MB xuống 2.1MB), vừa vặn vào bộ nhớ Flash.
+* Tập lệnh SIMD vector ESP-NN giảm độ trễ suy luận từ $>500\text{ ms}$ xuống $<150\text{ ms}$.
 
-## Status
-`[DECISION]` Accepted & Approved.
+## Trạng thái (Status)
+`[DECISION]` Đã phê duyệt & Thông qua.

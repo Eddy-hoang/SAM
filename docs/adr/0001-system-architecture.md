@@ -1,30 +1,27 @@
-# ADR-0001: Decoupled Edge-First Mesh System Architecture
+# ADR-0001: Kiến trúc Mạng Mesh Ưu tiên Edge Độc lập (Decoupled Edge-First Mesh)
 
-## Context
-Traditional home security systems stream raw sensor data to cloud servers for processing. This creates severe vulnerabilities during Internet outages, introduces 2–5 second latencies, and poses major user privacy risks.
+## Bối cảnh (Context)
+Các hệ thống an ninh nhà ở truyền thống liên tục stream dữ liệu cảm biến lên máy chủ cloud để xử lý. Điều này tạo ra rủi ro nghiêm trọng khi mất mạng Internet, gây độ trễ từ 2–5 giây và tiềm ẩn rò rỉ quyền riêng tư.
 
-## Problem
-How should SafeHome AI Mesh structure its processing hierarchy to guarantee sub-second emergency response and 100% offline operational resilience?
+## Vấn đề (Problem)
+SafeHome AI Mesh nên tổ chức phân tầng xử lý như thế nào để đảm bảo phản ứng khẩn cấp dưới 1 giây và khả năng hoạt động offline độc lập 100%?
 
-## Considered Options
-1. **Cloud-Centric Architecture:** ESP32 streams video to AWS/GCP cloud backend for AI and risk evaluation.
-2. **Gateway-Centric Architecture:** Raw video streamed over local Wi-Fi to a local Gateway PC for processing.
-3. **Edge-First Mesh Architecture:** ESP32-S3 performs local vision AI, emits debounced event metadata, uses ESP-NOW for emergency sirens, and sends telemetry to Gateway.
+## Các Phương án Đánh giá (Considered Options)
+1. **Kiến trúc Tập trung Cloud (Cloud-Centric):** ESP32 stream video lên cloud backend (AWS/GCP) để phân tích AI và đánh giá rủi ro.
+2. **Kiến trúc Tập trung Gateway (Gateway-Centric):** Stream video thô qua mạng Wi-Fi local tới một PC Gateway local để xử lý.
+3. **Kiến trúc Mesh Ưu tiên Edge (Edge-First Mesh):** ESP32-S3 thực hiện vision AI local, phát ra metadata sự kiện đã lọc nhiễu, dùng ESP-NOW cho còi báo động khẩn cấp và gửi telemetry về Gateway.
 
-## Decision
-We select **Option 3: Edge-First Mesh Architecture**. Edge vision inference occurs directly on ESP32-S3. Emergency alerting uses direct ESP-NOW peer-to-peer transmission, completely independent of Wi-Fi routers and internet access.
+## Quyết định (Decision)
+Lựa chọn **Phương án 3: Kiến trúc Mesh Ưu tiên Edge (Edge-First Mesh)**. Suy luận vision AI diễn ra trực tiếp trên ESP32-S3. Tín hiệu cảnh báo khẩn cấp dùng truyền phát Peer-to-Peer qua ESP-NOW, hoàn toàn độc lập với router Wi-Fi và kết nối Internet.
 
-## Why
-* **Latency:** ESP-NOW achieves $<15\text{ ms}$ direct transmission to local sirens.
-* **Resilience:** System functions continuously during WAN/Internet outages.
-* **Privacy:** Zero video streaming over local network or external servers.
+## Lý do (Why)
+* **Độ trễ:** ESP-NOW đạt độ trễ truyền phát trực tiếp tới còi local $<15\text{ ms}$.
+* **Khả năng Chịu lỗi:** Hệ thống tiếp tục vận hành mượt mà ngay cả khi ngắt kết nối mạng WAN/Internet.
+* **Quyền riêng tư:** Zero-video-streaming trên không gian mạng local hay máy chủ bên ngoài.
 
-## Trade-offs
-* Higher embedded software complexity on ESP32-S3 (TFLite Micro, memory management).
-* Microcontroller hardware constraints limit computer vision model complexity to lightweight models (MobileNet-V2).
+## Đánh đổi (Trade-offs)
+* Phức tạp lập trình nhúng cao hơn trên ESP32-S3 (TFLite Micro, quản lý bộ nhớ PSRAM).
+* Giới hạn vi điều khiển làm giảm độ phức tạp của mô hình vision AI xuống dạng mô hình nhẹ (MobileNet-V2).
 
-## Consequences
-All safety-critical features must be designed to run offline on local embedded hardware.
-
-## Status
-`[DECISION]` Accepted & Approved.
+## Trạng thái (Status)
+`[DECISION]` Đã phê duyệt & Thông qua.

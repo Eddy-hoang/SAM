@@ -1,21 +1,21 @@
-# ADR-0004: Embedded Gateway Database Selection (SQLite WAL Mode)
+# ADR-0004: Lựa chọn Cơ sở Dữ liệu Gateway Nhúng (SQLite WAL Mode)
 
-## Context
-The Edge Gateway requires persistent, structured, low-latency local storage for event logs, device health metrics, and active alerts on Raspberry Pi hardware.
+## Bối cảnh (Context)
+Edge Gateway cần một hệ lưu trữ local persistent, có cấu trúc, độ trễ thấp cho nhật ký sự kiện, chỉ số sức khỏe thiết bị và các cảnh báo active trên phần cứng Raspberry Pi.
 
-## Problem
-Which database system should be selected for local edge storage?
+## Vấn đề (Problem)
+Hệ quản trị cơ sở dữ liệu nào nên được chọn cho lưu trữ cục bộ tại edge?
 
-## Considered Options
-1. **Full RDBMS (PostgreSQL / MySQL):** Heavyweight server database.
-2. **Embedded Time-Series (SQLite in WAL Mode):** Zero-configuration single-file embedded relational store with Write-Ahead Logging.
+## Các Phương án Đánh giá (Considered Options)
+1. **RDBMS Đầy đủ (PostgreSQL / MySQL):** Hệ CSDL server nặng.
+2. **Time-Series Nhúng (SQLite ở chế độ WAL Mode):** CSDL quan hệ nhúng lưu file duy nhất, cấu hình bằng 0 với tính năng Write-Ahead Logging.
 
-## Decision
-We select **Option 2: SQLite in WAL Mode**.
+## Quyết định (Decision)
+Lựa chọn **Phương án 2: SQLite ở chế độ WAL Mode**.
 
-## Why
-* **Resource Footprint:** Requires $<5\text{MB}$ RAM compared to $>200\text{MB}$ for PostgreSQL.
-* **Maintenance:** Zero database administration or service setup required; robust ACID transactions on flash storage.
+## Lý do (Why)
+* **Dung lượng Bộ nhớ:** Chiếm $<5\text{MB}$ RAM so với $>200\text{MB}$ của PostgreSQL.
+* **Bảo trì:** Không cần quản trị CSDL hay dịch vụ server phức tạp; giao dịch ACID tin cậy trên bộ nhớ flash.
 
-## Status
-`[DECISION]` Accepted & Approved.
+## Trạng thái (Status)
+`[DECISION]` Đã phê duyệt & Thông qua.

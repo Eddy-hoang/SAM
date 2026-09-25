@@ -1,31 +1,31 @@
-# 27 - Technical Glossary
+# 27 - Thuật ngữ Kỹ thuật (Glossary)
 
-> **Document Status:** `[DECISION]` Technical Terms & Domain References  
+> **Trạng thái Tài liệu:** `[DECISION]` Từ điển Thuật ngữ Kỹ thuật & Khái niệm  
 
 ---
 
-## 1. Glossary Terms
+## 1. Danh mục Thuật ngữ
 
 ### ESP-NOW
-A low-power, peer-to-peer connectionless wireless communication protocol developed by Espressif that uses vendor-specific IEEE 802.11 action frames. Used in SafeHome for sub-50ms emergency alert transmission bypassing Wi-Fi routers.
+Giao thức truyền thông không dây không kết nối (connectionless), công suất thấp do Espressif phát triển, sử dụng các khung tin IEEE 802.11 action frames tùy biến. Trong SafeHome, ESP-NOW được dùng cho kênh cảnh báo khẩn cấp sub-50ms không phụ thuộc router Wi-Fi.
 
 ### Edge AI
-The execution of artificial intelligence machine learning models directly on localized microcontroller units or edge gateway hardware without streaming raw data to cloud servers. Used in SafeHome for on-device vision detection on ESP32-S3.
+Phương thức thực thi các mô hình trí tuệ nhân tạo machine learning trực tiếp trên vi điều khiển cục bộ hoặc thiết bị edge gateway mà không gửi dữ liệu thô về máy chủ cloud. Được dùng trong SafeHome để nhận diện hình ảnh trực tiếp trên chip ESP32-S3.
 
 ### PSRAM (Pseudo-Static RAM)
-External RAM connected to ESP32 microcontrollers via SPI/QSPI interfaces. SafeHome uses 8MB Octal PSRAM on ESP32-S3 to hold camera frame buffers and TensorFlow Lite model weights.
+Bộ nhớ RAM mở rộng bên ngoài kết nối với vi điều khiển ESP32 qua giao tiếp SPI/QSPI. SafeHome sử dụng 8MB Octal PSRAM trên ESP32-S3 để chứa các bộ đệm khung hình camera và trọng số mô hình TensorFlow Lite.
 
 ### Temporal Engine & Debounce
-A software state machine that filters transient noise and glitches by requiring multiple consecutive frame matches over time before transitioning states. Prevents false alarm spam.
+Bộ máy trạng thái phần mềm lọc bỏ nhiễu và tín hiệu thoáng qua bằng cách yêu cầu nhiều khung hình nhận diện khớp liên tiếp theo thời gian trước khi chuyển trạng thái. Giúp triệt tiêu báo động giả.
 
 ### Hysteresis
-The dependence of a system state on its operational history. Used in SafeHome's Risk Engine to prevent rapid bouncing between `NORMAL` and `CRITICAL` alert levels during marginal sensor readings.
+Đặc tính của một hệ thống khi trạng thái phụ thuộc vào lịch sử vận hành trước đó. Được sử dụng trong Risk Engine của SafeHome để ngăn hiện tượng bật/tắt liên tục giữa các cấp độ cảnh báo `NORMAL` và `CRITICAL`.
 
 ### Idempotency
-An API property where executing an operation multiple times produces identical results as executing it once. Enforced in SafeHome using UUID-based event deduplication.
+Tính chất của một API khi thực thi một thao tác nhiều lần vẫn trả về kết quả giống hệt như thực thi một lần. Được đảm bảo trong SafeHome bằng cơ chế khử trùng lặp dựa trên V4 UUID.
 
 ### Risk Engine
-A deterministic software evaluator on the Gateway that correlates events from multiple sensors/cameras, calculates a system risk score (0-100), and maintains system threat levels.
+Bộ đánh giá định tính trên Gateway có nhiệm vụ tổng hợp các sự kiện từ nhiều cảm biến/camera, tính toán điểm rủi ro hệ thống (0-100) và quản lý cấp độ đe dọa.
 
 ### Safety Policy Firewall
-An isolated, read-only decision module that validates high-level software commands against hardcoded safety invariants before allowing physical hardware actuation.
+Mô-đun quyết định đọc mã nguồn độc lập, có nhiệm vụ kiểm duyệt các lệnh phần mềm cấp cao dựa trên các bất biến an toàn (Safety Invariants) trước khi cho phép kích hoạt phần cứng vật lý.

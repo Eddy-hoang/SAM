@@ -1,89 +1,89 @@
-# 04 - Component Architecture
+# 04 - Kiến trúc Thành phần (Component Architecture)
 
-> **Document Status:** `[DECISION]` Baseline Component Specifications  
-
----
-
-## 1. Component Specification Template
-
-Each system component is defined strictly using the 8-point architectural template:
-1. **Purpose**
-2. **Responsibilities**
-3. **Inputs**
-4. **Outputs**
-5. **Dependencies**
-6. **Failure Modes**
-7. **Security Considerations**
-8. **Scaling Considerations**
+> **Trạng thái Tài liệu:** `[DECISION]` Đặc tả Thành phần Cơ sở  
 
 ---
 
-## 2. Edge Layer Components
+## 1. Tiêu chuẩn Mô tả Thành phần (8-Point Template)
 
-### 2.1 ESP32-S3 Edge Vision Node
-* **Purpose:** Performs localized camera frame acquisition, Edge AI inference (person/hazard detection), temporal filtering, and emergency broadcast.
-* **Responsibilities:** Frame buffer management, model execution, debounce state machine, AES-128 ESP-NOW framing, heartbeats.
-* **Inputs:** Raw CMOS sensor signals (OV2640 over DVP interface), power, ESP-NOW configuration.
-* **Outputs:** Encrypted ESP-NOW emergency frames, Wi-Fi MQTT telemetry packets, diagnostic serial logs.
-* **Dependencies:** ESP-IDF v5.x, TensorFlow Lite Micro, ESP-NOW drivers.
-* **Failure Modes:** Camera lens occlusion, PSRAM memory fragmentation, thermal throttling under direct sunlight.
-* **Security Considerations:** Firmware readout protection (Flash Encryption), AES-128 key stored in NVS, sequence number generation.
-* **Scaling Considerations:** Up to 8 camera nodes per Gateway area without Wi-Fi channel saturation.
-
-### 2.2 Environmental & Perimeter Sensor Node
-* **Purpose:** Captures discrete binary (PIR, Reed) or analog (MQ-2 smoke/gas) environmental safety data.
-* **Responsibilities:** Sensor sampling, threshold crossing detection, direct ESP-NOW alerting, power management (sleep cycles).
-* **Inputs:** GPIO pin changes (reed switch interrupt), analog ADC values (smoke density).
-* **Outputs:** ESP-NOW emergency frames, periodic battery health status.
-* **Dependencies:** ESP32-C3 / ESP8266 silicon, ADC calibration tables.
-* **Failure Modes:** Sensor element drift, depleted battery, false contact bounce on mechanical switches.
-* **Security Considerations:** Sequence counter anti-replay protection, pre-shared ESP-NOW network key.
-* **Scaling Considerations:** Up to 32 low-power sensor nodes per ESP-NOW mesh sector.
+Mỗi thành phần trong hệ thống được định nghĩa nghiêm ngặt theo mẫu đặc tả 8 điểm:
+1. **Mục đích (Purpose)**
+2. **Nhiệm vụ chính (Responsibilities)**
+3. **Đầu vào (Inputs)**
+4. **Đầu ra (Outputs)**
+5. **Thành phần Phụ thuộc (Dependencies)**
+6. **Kịch bản Thất bại (Failure Modes)**
+7. **Cân nhắc An ninh (Security Considerations)**
+8. **Cân nhắc Mở rộng (Scaling Considerations)**
 
 ---
 
-## 3. Communication & Gateway Components
+## 2. Các Thành phần Tầng Edge (Edge Layer Components)
 
-### 3.1 Edge Gateway Event Processor
-* **Purpose:** Ingests raw serial/MQTT/ESP-NOW messages, validates schemas, performs deduplication, and normalizes into formal system Events.
-* **Responsibilities:** Message validation, sequence order check, deduplication window management, standard JSON event generation.
-* **Inputs:** ESP-NOW frames (via Serial bridge), MQTT payload topics (`safehome/device/+/telemetry`).
-* **Outputs:** Normalized `SystemEvent` instances routed to Risk Engine and DB.
-* **Dependencies:** Gateway runtime (Node.js/Go/Python), MQTT broker (Mosquitto).
-* **Failure Modes:** Serial buffer overflow, invalid JSON payload injection, clock drift on ingest timestamping.
-* **Security Considerations:** Schema validation prevents injection; HMAC verification drops unauthorized messages.
-* **Scaling Considerations:** Single instance handles up to 500 events/sec (far exceeding standard home loads).
+### 2.1 Nút ESP32-S3 Edge Vision Node
+* **Mục đích:** Thực hiện bắt khung hình camera cục bộ, suy luận Edge AI (phát hiện người/thảm họa), lọc nhiễu theo thời gian (temporal filtering) và phát tín hiệu khẩn cấp.
+* **Nhiệm vụ chính:** Quản lý frame buffer, thực thi mô hình TFLite Micro, vận hành state machine debounce, đóng gói khung tin ESP-NOW mã hóa AES-128, gửi heartbeat.
+* **Đầu vào:** Tín hiệu CMOS sensor thô (OV2640 qua giao tiếp DVP), nguồn điện, cấu hình ESP-NOW.
+* **Đầu ra:** Gói tin khẩn cấp ESP-NOW mã hóa, gói tin telemetry MQTT qua Wi-Fi, log chẩn đoán serial.
+* **Thành phần Phụ thuộc:** ESP-IDF v5.x, TensorFlow Lite Micro, driver ESP-NOW.
+* **Kịch bản Thất bại:** Ống kính camera bị che khuất, phân mảnh bộ nhớ PSRAM, thảm nhiệt CPU khi bị nắng chiếu trực tiếp.
+* **Cân nhắc An ninh:** Bảo vệ chống đọc ngược firmware (Flash Encryption), khóa mã hóa AES-128 lưu trong NVS, tạo sequence number chống phát lại.
+* **Cân nhắc Mở rộng:** Hỗ trợ tối đa 8 nút camera cho mỗi khu vực Gateway mà không gây nghẽn kênh Wi-Fi.
+
+### 2.2 Nút Cảm biến Môi trường & Vi phạm Ranh giới (Sensor Node)
+* **Mục đích:** Thu thập dữ liệu an toàn môi trường dạng nhị phân (PIR, Reed switch) hoặc analog (khói/gas MQ-2).
+* **Nhiệm vụ chính:** Đọc mẫu cảm biến, phát hiện vượt ngưỡng, phát cảnh báo ESP-NOW trực tiếp, quản lý năng lượng (tiết kiệm pin).
+* **Đầu vào:** Thay đổi chân GPIO (ngắt công tắc cửa), giá trị analog ADC (nồng độ khói/gas).
+* **Đầu ra:** Gói tin khẩn cấp ESP-NOW, trạng thái dung lượng pin định kỳ.
+* **Thành phần Phụ thuộc:** Vi điều khiển ESP32-C3 / ESP8266, bảng hiệu chuẩn ADC.
+* **Kịch bản Thất bại:** Trôi điểm chuẩn cảm biến, kiệt pin, dội tiếp điểm cơ khí (contact bounce).
+* **Cân nhắc An ninh:** Chống phát lại bằng sequence counter, khóa mạng mã hóa pre-shared ESP-NOW.
+* **Cân nhắc Mở rộng:** Hỗ trợ tối đa 32 nút cảm biến công suất thấp trên mỗi phân đoạn mạng ESP-NOW mesh.
+
+---
+
+## 3. Thành phần Truyền thông & Gateway (Communication & Gateway)
+
+### 3.1 Bộ Xử lý Sự kiện Gateway (Event Processor)
+* **Mục đích:** Ingest các tin nhắn thô từ Serial/MQTT/ESP-NOW, xác minh schema, khử trùng lặp (deduplication) và chuẩn hóa thành các `SystemEvent` thống nhất.
+* **Nhiệm vụ chính:** Xác thực tin nhắn, kiểm tra thứ tự sequence number, quản lý cửa sổ khử trùng lặp LRU, tạo đối tượng JSON sự kiện chuẩn.
+* **Đầu vào:** Gói tin ESP-NOW (qua Serial bridge), topic MQTT telemetry (`safehome/device/+/telemetry`).
+* **Đầu ra:** Đối tượng `SystemEvent` đã chuẩn hóa chuyển tới Risk Engine và DB.
+* **Thành phần Phụ thuộc:** Gateway runtime (Node.js/Go/Python), MQTT broker (Mosquitto).
+* **Kịch bản Thất bại:** Tràn bộ đệm Serial, tiêm payload JSON không hợp lệ, lệch xung nhịp timestamping.
+* **Cân nhắc An ninh:** Kiểm duyệt Schema ngăn chặn mã độc tiêm vào; xác minh HMAC loại bỏ tin nhắn giả mạo.
+* **Cân nhắc Mở rộng:** Xử lý lên tới 500 events/giây trên 1 instance (vượt xa tải nhà ở thông thường).
 
 ### 3.2 Deterministic Risk Engine
-* **Purpose:** Evaluates normalized system events against rule matrices to determine real-time home risk score and threat state.
-* **Responsibilities:** Multi-event correlation (e.g. PIR + Motion), risk score calculation (0–100), state transition management (NORMAL $\rightarrow$ CRITICAL).
-* **Inputs:** Normalized `SystemEvent` objects, stored safety rules, hysteresis timers.
-* **Outputs:** System Risk State updates, actuation commands to Safety Policy.
-* **Dependencies:** Local Database, In-Memory State Storage (Redis / Map).
-* **Failure Modes:** Corrupted rule configuration file, state deadlocks.
-* **Security Considerations:** Hardcoded deterministic bounds prevent rule override via external API without administrative password.
-* **Scaling Considerations:** In-memory rule table execution completes in $<1\text{ ms}$.
+* **Mục đích:** Đánh giá các sự kiện hệ thống đã chuẩn hóa theo ma trận quy tắc để tính toán điểm rủi ro và cấp độ đe dọa realtime.
+* **Nhiệm vụ chính:** Gom nhóm nhiều sự kiện (PIR + Vision), tính toán điểm rủi ro (0–100), quản lý chuyển trạng thái đe dọa (NORMAL $\rightarrow$ CRITICAL).
+* **Đầu vào:** Đối tượng `SystemEvent`, quy tắc an toàn đã lưu, bộ đếm thời gian hysteresis.
+* **Đầu ra:** Cập nhật trạng thái Risk State, phát lệnh điều khiển tới Safety Policy.
+* **Thành phần Phụ thuộc:** CSDL Local, Bộ nhớ In-Memory State (Redis / Map).
+* **Kịch bản Thất bại:** File cấu hình quy tắc bị hỏng, bế tắc trạng thái (state deadlock).
+* **Cân nhắc An ninh:** Quy tắc định tính được ghi cứng ngăn chặn việc đè quy tắc từ API bên ngoài nếu không có mật khẩu Admin.
+* **Cân nhắc Mở rộng:** Thời gian thực thi bảng quy tắc in-memory $<1\text{ ms}$.
 
 ### 3.3 Safety Policy & Command Validator
-* **Purpose:** Acts as a strictly isolated firewall between high-level intelligence (AI/LLM/Risk Engine) and physical actuators.
-* **Responsibilities:** Validating whether an actuation request (e.g. unlock door, activate siren) complies with hardcoded safety invariants.
-* **Inputs:** Proposed commands from Risk Engine or AI Service.
-* **Outputs:** Approved Actuation Commands sent to Gateway Hardware Bridge, or Rejected Command Logs.
-* **Dependencies:** Hardcoded Policy Module (read-only binary logic).
-* **Failure Modes:** Rejection of valid commands due to misconfigured policy bounds.
-* **Security Considerations:** AI services CANNOT bypass this validator under any operational mode.
-* **Scaling Considerations:** Zero external dependencies; execution is microsecond-level.
+* **Mục đích:** Đóng vai trò tường lửa cách ly tuyệt đối giữa trí tuệ cấp cao (AI/LLM/Risk Engine) và các thiết bị kích hoạt phần cứng (actuators).
+* **Nhiệm vụ chính:** Xác minh xem lệnh kích hoạt (mở cửa, bật còi) có tuân thủ các bất biến an toàn (Safety Invariants) hay không.
+* **Đầu vào:** Lệnh đề xuất từ Risk Engine hoặc AI Service.
+* **Đầu ra:** Lệnh kích hoạt đã phê duyệt chuyển tới Gateway Hardware Bridge, hoặc Log từ chối lệnh.
+* **Thành phần Phụ thuộc:** Policy Module mã nguồn đọc (read-only binary logic).
+* **Kịch bản Thất bại:** Từ chối nhầm lệnh hợp lệ do cấu hình sai ngưỡng Policy.
+* **Cân nhắc An ninh:** Các dịch vụ AI KHÔNG THỂ vượt qua tầng kiểm duyệt này trong bất kỳ chế độ vận hành nào.
+* **Cân nhắc Mở rộng:** Không phụ thuộc bên ngoài; thời gian thực thi ở mức microsecond.
 
 ---
 
-## 4. Application & Interface Components
+## 4. Thành phần Ứng dụng & Giao diện (Application & Interfaces)
 
 ### 4.1 Realtime WebSocket Broker & API Server
-* **Purpose:** Exposes RESTful management endpoints and pushes instantaneous WebSocket telemetry to operator dashboards.
-* **Responsibilities:** Client connection management, JWT auth, WebSocket topic subscription filtering, HTTP REST routing.
-* **Inputs:** Operator HTTP requests, Risk Engine state change broadcasts.
-* **Outputs:** JSON REST responses, live WebSocket frame feeds.
-* **Dependencies:** Node.js Express/Fastify or Python FastAPI, WS library.
-* **Failure Modes:** WebSocket client disconnects during network handover, API port exhaustion.
-* **Security Considerations:** TLS/WSS encryption, JWT token validation, IP rate limiting.
-* **Scaling Considerations:** Accommodates up to 50 concurrent dashboard client sessions natively.
+* **Mục đích:** Cung cấp các RESTful endpoint quản lý và push telemetry WebSocket ngay tức thì tới dashboard người vận hành.
+* **Nhiệm vụ chính:** Quản lý kết nối client, xác thực JWT, lọc subscription WebSocket topic, điều hướng HTTP REST.
+* **Đầu vào:** HTTP Request từ người dùng, broadcast chuyển trạng thái từ Risk Engine.
+* **Đầu ra:** HTTP REST JSON Response, luồng frame WebSocket realtime.
+* **Thành phần Phụ thuộc:** Node.js Express/Fastify hoặc Python FastAPI, thư viện WS.
+* **Kịch bản Thất bại:** Mất kết nối WebSocket client khi chuyển mạng, cạn kiệt cổng API.
+* **Cân nhắc An ninh:** Mã hóa TLS/WSS, xác thực JWT token, giới hạn tần suất IP Rate Limiting.
+* **Cân nhắc Mở rộng:** Hỗ trợ đồng thời 50 phiên làm việc dashboard client mượt mà.
